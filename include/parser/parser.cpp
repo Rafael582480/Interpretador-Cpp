@@ -20,19 +20,19 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS to
 
     std::string op;
     std::string nextNum;
-    if (tokens.EXPRESSION[i].lexeme == "+")
+    if (tokens.EXPRESSION[i].lexeme == "+" || tokens.EXPRESSION[i].lexeme == "*" || tokens.EXPRESSION[i].lexeme == "-" )
     {
       op = tokens.EXPRESSION[i].lexeme;
     }
 
-    if (tokens.EXPRESSION[i + 1].lexeme != "+")
+    if (tokens.EXPRESSION[i + 1].lexeme != "+" || tokens.EXPRESSION[i].lexeme != "*" || tokens.EXPRESSION[i].lexeme != "-")
     {
       nextNum = tokens.EXPRESSION[i + 1].lexeme;
     }
 
     auto newTree = std::make_unique<Node>();
 
-    if (op == "+")
+    if (op == "+" || op == "*" || op == "-")
     {
       newTree->type = "operator";
     }
@@ -51,12 +51,12 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS to
     }
 
     newTree->value = op;
-    newTree->right = std::move(tree);
+    newTree->left = std::move(tree);
 
-    newTree->left = std::make_unique<Node>();
+    newTree->right = std::make_unique<Node>();
 
-    newTree->left->type = "number";
-    newTree->left->value = nextNum;
+    newTree->right->type = "number";
+    newTree->right->value = nextNum;
 
     tree = std::move(newTree);
   }
