@@ -11,7 +11,7 @@
 
 class ParserPrimary
 {
-private:
+public:
   struct Node
   {
     std::string type;
@@ -31,7 +31,8 @@ private:
 
   std::unique_ptr<Node> ParserPrint(Lexer::TOKENS tokens);
 
-public:
+  Identifier identifierNode;
+  
   ParserPrimary(Lexer::TOKENS tokens)
   {
     std::string identifier = tokens.EXPRESSION[0].lexeme;
@@ -50,17 +51,21 @@ public:
         validTokens.push_back(token);
       }
     }
-    
+
     tokens.EXPRESSION = validTokens;
 
     tokens.EXPRESSION.erase(tokens.EXPRESSION.begin() + 0);
 
     if (identifier == "print")
     {
-      Identifier identifierNode;
       identifierNode.type = "print";
 
       identifierNode.node = ParserPrint(tokens);
     }
+    else
+    {
+      std::cerr << "Error: Unknown identifier '" << identifier << "'." << std::endl;
+    }
   }
+
 };
