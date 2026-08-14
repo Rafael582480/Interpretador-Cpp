@@ -6,60 +6,64 @@
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
 
-std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS tokens)
+std::unique_ptr<ParserPrimary::Node> Term(std::vector<std::string> Tokens)
 {
-  auto tree = std::make_unique<Node>();
-
+  auto tree = std::make_unique<ParserPrimary::Node>();
   tree->type = "number";
-  tree->value = tokens.EXPRESSION[0].lexeme;
+  tree->value = Tokens[0];
 
-  for (size_t i = 1; i < tokens.EXPRESSION.size(); i++)
+  if (Tokens.size() == 1)
   {
-    if (i + 1 >= tokens.EXPRESSION.size())
-      break;
+    return tree;
+  }
 
-    std::string op;
-    std::string nextNum;
-    if (tokens.EXPRESSION[i].lexeme == "+" || tokens.EXPRESSION[i].lexeme == "*" || tokens.EXPRESSION[i].lexeme == "-" )
-    {
-      op = tokens.EXPRESSION[i].lexeme;
-    }
-
-    if (tokens.EXPRESSION[i + 1].lexeme != "+" || tokens.EXPRESSION[i].lexeme != "*" || tokens.EXPRESSION[i].lexeme != "-")
-    {
-      nextNum = tokens.EXPRESSION[i + 1].lexeme;
-    }
-
-    auto newTree = std::make_unique<Node>();
-
-    if (op == "+" || op == "*" || op == "-")
+  for (int i = 1; i < Tokens.size(); i++)
+  {
+    auto newTree = std::make_unique<ParserPrimary::Node>();
+    if (Tokens[i] == "*" || Tokens[i] == "/")
     {
       newTree->type = "operator";
-    }
-    else
-    {
-      newTree->type = "number";
-    }
+      newTree->value = Tokens[i];
 
-    if(op == "")
+      auto right = std::make_unique<ParserPrimary::Node>();
+      right->type = "number";
+      right->value = Tokens[i + 1];
+      newTree->right = std::move(right);
+
+      newTree->left = std::move(tree);
+
+      tree = std::move(newTree);
+    }
+  };
+
+  return tree;
+};
+
+std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS Tokens)
+{
+  auto tree = std::make_unique<Node>();
+  std::vector<std::string> tks;
+
+  for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
+  {
+    auto newTree = std::make_unique<Node>();
+    if (Tokens.EXPRESSION[i].lexeme != "+" && Tokens.EXPRESSION[i].lexeme != "-")
     {
+      tks.push_back(Tokens.EXPRESSION[i].lexeme);
       continue;
     }
-    if(nextNum == "")
-    {
-      continue;
-    }
 
-    newTree->value = op;
+    newTree->type = "operator";
+    newTree->value = Tokens.EXPRESSION[i].lexeme;
+
+    newTree->right = Term(tks);
     newTree->left = std::move(tree);
 
-    newTree->right = std::make_unique<Node>();
-
-    newTree->right->type = "number";
-    newTree->right->value = nextNum;
-
     tree = std::move(newTree);
+    tks.clear();
   }
+
+  tree->left = Term(tks);
 
   return tree;
 }

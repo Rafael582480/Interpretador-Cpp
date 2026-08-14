@@ -46,6 +46,10 @@ int Evaluate::PrintEvaluate(ParserPrimary::Node &node, int pos = 0)
     {
       return left * right;
     }
+    else if (node.value == "/")
+    {
+      return left / right;
+    }
   }
 
   return 0;

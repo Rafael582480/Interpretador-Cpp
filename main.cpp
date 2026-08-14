@@ -10,7 +10,7 @@
 int main()
 {
   std::string line;
-  std::ifstream Arquivo("./test/txt");
+  std::ifstream Arquivo("./test/txt.txt");
 
   while (getline(Arquivo, line))
   {

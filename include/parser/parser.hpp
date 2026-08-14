@@ -29,7 +29,7 @@ public:
     std::unique_ptr<Node> node;
   };
 
-  std::unique_ptr<Node> ParserPrint(Lexer::TOKENS tokens);
+  std::unique_ptr<Node> ParserPrint(Lexer::TOKENS Tokens);
 
   Identifier identifierNode;
   
