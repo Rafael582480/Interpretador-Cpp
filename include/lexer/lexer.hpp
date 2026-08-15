@@ -9,6 +9,7 @@ class Lexer
 public:
   enum class TokenType
   {
+    String,
     Number,
     Identifier,
 
@@ -17,6 +18,7 @@ public:
     Multiply,
     Divide,
 
+    Aspas,
     LeftParen,
     RightParen,
     Semicolon,
@@ -41,7 +43,6 @@ public:
 
   Lexer(std::string line)
   {
-    line = RemoveSpace(line);
     TransformTokens(line);
   }
 
@@ -49,8 +50,6 @@ public:
   {
     return tokens;
   }
-
-  std::string RemoveSpace(std::string line);
 
   void TransformTokens(std::string line);
 };

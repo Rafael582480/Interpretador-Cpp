@@ -14,8 +14,7 @@ int main()
 
   while (getline(Arquivo, line))
   {
-    if (line.empty() || std::all_of(line.begin(), line.end(), [](unsigned char c)
-                                    { return std::isspace(c); }))
+    if (line.empty() || std::all_of(line.begin(), line.end(), [](unsigned char c) { return std::isspace(c); }))
     {
       continue;
     }

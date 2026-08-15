@@ -39,14 +39,14 @@ std::unique_ptr<ParserPrimary::Node> Term(std::vector<std::string> Tokens)
   return tree;
 };
 
-std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS Tokens)
+std::unique_ptr<ParserPrimary::Node> Expression(Lexer::TOKENS Tokens)
 {
-  auto tree = std::make_unique<Node>();
+  auto tree = std::make_unique<ParserPrimary::Node>();
   std::vector<std::string> tks;
 
   for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
   {
-    auto newTree = std::make_unique<Node>();
+    auto newTree = std::make_unique<ParserPrimary::Node>();
     if (Tokens.EXPRESSION[i].lexeme != "+" && Tokens.EXPRESSION[i].lexeme != "-")
     {
       tks.push_back(Tokens.EXPRESSION[i].lexeme);
@@ -64,6 +64,39 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS To
   }
 
   tree->left = Term(tks);
+
+  return tree;
+}
+
+std::unique_ptr<ParserPrimary::Node> String(Lexer::TOKENS Tokens)
+{
+  auto tree = std::make_unique<ParserPrimary::Node>();
+  
+  tree->type = "String";
+
+  for(int i=0; i < Tokens.EXPRESSION.size(); i++)
+  {
+    if(Tokens.EXPRESSION[i].lexeme == "'")
+    { 
+      continue;
+    }
+
+    tree->value += Tokens.EXPRESSION[i].lexeme;
+  }
+
+  return tree;
+}
+
+std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS Tokens)
+{
+  auto tree = std::make_unique<ParserPrimary::Node>();
+
+  if(Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
+  {
+    tree = String(Tokens);
+  } else {
+    tree = Expression(Tokens);
+  }
 
   return tree;
 }

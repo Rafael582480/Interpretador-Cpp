@@ -2,23 +2,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
-
-std::string Lexer::RemoveSpace(std::string line)
-{
-  std::string newLine;
-
-  for (char c : line)
-  {
-    if (c != ' ')
-    {
-      newLine += c;
-    }
-  }
-
-  line = newLine;
-
-  return line;
-}
+#include <cctype>
 
 void Lexer::TransformTokens(std::string line)
 {
@@ -26,19 +10,35 @@ void Lexer::TransformTokens(std::string line)
 
     for (size_t i = 0; i < line.size(); i++)
     {
-        char c = line[i];
+        auto c = line[i];
+        
+        if (c == '"')
+        {
+            std::string value;
 
-        // ignora espaços
-        if (std::isspace(static_cast<unsigned char>(c)))
+            i++;
+
+            while (i < line.size() && line[i] != '"')
+            {
+                value += line[i];
+                i++;
+            }
+
+            tokens.EXPRESSION.push_back({TokenType::String, value});
+
             continue;
+        }
 
-        // números
+        if (std::isspace(static_cast<unsigned char>(c)))
+        {
+            continue;
+        }
+
         if (std::isdigit(static_cast<unsigned char>(c)))
         {
             current.clear();
 
-            while (i < line.size() &&
-                   std::isdigit(static_cast<unsigned char>(line[i])))
+            while (i < line.size() && std::isdigit(static_cast<unsigned char>(line[i])))
             {
                 current += line[i];
                 i++;
@@ -46,20 +46,18 @@ void Lexer::TransformTokens(std::string line)
 
             i--;
 
-            tokens.EXPRESSION.push_back(
-                {TokenType::Number, current});
+            tokens.EXPRESSION.push_back({TokenType::Number, current});
 
             continue;
         }
 
-        // identificadores / palavras reservadas
         if (std::isalpha(static_cast<unsigned char>(c)))
         {
             current.clear();
 
             while (i < line.size() &&
-                  (std::isalnum(static_cast<unsigned char>(line[i])) ||
-                   line[i] == '_'))
+                   (std::isalnum(static_cast<unsigned char>(line[i])) ||
+                    line[i] == '_'))
             {
                 current += line[i];
                 i++;
@@ -91,7 +89,6 @@ void Lexer::TransformTokens(std::string line)
             tokens.EXPRESSION.push_back({TokenType::Minus, "-"});
             break;
 
-        case 'x':
         case '*':
             tokens.EXPRESSION.push_back({TokenType::Multiply, "*"});
             break;
@@ -112,12 +109,14 @@ void Lexer::TransformTokens(std::string line)
             tokens.EXPRESSION.push_back({TokenType::Semicolon, ";"});
             break;
 
+        case '"':
+            tokens.EXPRESSION.push_back({TokenType::Aspas, "\""});
+            break;
+
         default:
-            throw std::runtime_error(
-                "Caractere inválido: " + std::string(1, c));
+            throw std::runtime_error("Caractere inválido: " + std::string(1, c));
         }
     }
 
-    tokens.EXPRESSION.push_back(
-        {TokenType::EndOfFile, ""});
+    tokens.EXPRESSION.push_back({TokenType::EndOfFile, ""});
 }

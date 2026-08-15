@@ -6,10 +6,16 @@ Evaluate::Evaluate(ParserPrimary::Identifier identifier)
 {
   if (identifier.type == "print")
   {
-    int result = 0;
-    int val = PrintEvaluate(*identifier.node, 0);
+    if (identifier.node->type != "String")
+    {
+      int val = PrintEvaluate(*identifier.node, 0);
 
-    std::cout << val << std::endl;
+      std::cout << val << std::endl;
+    }
+    else
+    {
+      std::cout << identifier.node->value << std::endl;
+    }
   }
   else
   {
@@ -24,6 +30,11 @@ int printNodeInfo(ParserPrimary::Node &node, int pos)
 
 int Evaluate::PrintEvaluate(ParserPrimary::Node &node, int pos = 0)
 {
+  if (node.type == "String")
+  {
+    std::cout << node.value << std::endl;
+  }
+
   if (node.type == "number")
   {
     return printNodeInfo(node, pos);
@@ -36,19 +47,19 @@ int Evaluate::PrintEvaluate(ParserPrimary::Node &node, int pos = 0)
 
     if (node.value == "+")
     {
-      return left + right;
+      return right + left;
     }
     else if (node.value == "-")
     {
-      return left - right;
+      return right - left;
     }
     else if (node.value == "*")
     {
-      return left * right;
+      return right * left;
     }
     else if (node.value == "/")
     {
-      return left / right;
+      return right / left;
     }
   }
 
