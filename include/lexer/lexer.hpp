@@ -18,12 +18,16 @@ public:
     Multiply,
     Divide,
 
+    Receives,
+
     Aspas,
     LeftParen,
     RightParen,
     Semicolon,
 
+    Name,
     Print,
+    Var,
 
     EndOfFile
   };

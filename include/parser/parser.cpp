@@ -71,13 +71,13 @@ std::unique_ptr<ParserPrimary::Node> Expression(Lexer::TOKENS Tokens)
 std::unique_ptr<ParserPrimary::Node> String(Lexer::TOKENS Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
-  
+
   tree->type = "String";
 
-  for(int i=0; i < Tokens.EXPRESSION.size(); i++)
+  for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
   {
-    if(Tokens.EXPRESSION[i].lexeme == "'")
-    { 
+    if (Tokens.EXPRESSION[i].lexeme == "'")
+    {
       continue;
     }
 
@@ -91,11 +91,16 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS To
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
 
-  if(Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
+  if (Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
   {
     tree = String(Tokens);
-  } else {
+  }
+  else if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
+  {
     tree = Expression(Tokens);
+  } else {
+    tree->type = "var";
+    tree->value = Tokens.EXPRESSION[0].lexeme;
   }
 
   return tree;

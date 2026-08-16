@@ -26,13 +26,15 @@ public:
   {
     std::string type;
 
+    std::string identifer;
+
     std::unique_ptr<Node> node;
   };
 
   std::unique_ptr<Node> ParserPrint(Lexer::TOKENS Tokens);
 
   Identifier identifierNode;
-  
+
   ParserPrimary(Lexer::TOKENS tokens)
   {
     std::string identifier = tokens.EXPRESSION[0].lexeme;
@@ -62,10 +64,36 @@ public:
 
       identifierNode.node = ParserPrint(tokens);
     }
+    else if (identifier == "var")
+    {
+      identifierNode.type = "var";
+      identifierNode.identifer = tokens.EXPRESSION[0].lexeme;
+
+      std::vector<Lexer::Tokens> valueTokens;
+
+      Lexer::TOKENS valueTokStruct;
+
+      bool pass = false;
+
+      for (size_t i = 0; i < tokens.EXPRESSION.size(); i++)
+      {
+        if (tokens.EXPRESSION[i].lexeme == "=")
+        {
+          pass = true;
+          continue;
+        }
+
+        if (pass)
+        {
+          valueTokStruct.EXPRESSION.push_back(tokens.EXPRESSION[i]);
+        }
+      }
+
+      identifierNode.node = ParserPrint(valueTokStruct);
+    }
     else
     {
       std::cerr << "Error: Unknown identifier '" << identifier << "'." << std::endl;
     }
   }
-
 };

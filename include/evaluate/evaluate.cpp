@@ -1,20 +1,42 @@
 #include "evaluate.hpp"
 #include "../parser/parser.hpp"
+#include "../environment/environment.hpp"
 #include <memory>
+#include <variant>
+
+Environment environment;
 
 Evaluate::Evaluate(ParserPrimary::Identifier identifier)
 {
+
   if (identifier.type == "print")
   {
-    if (identifier.node->type != "String")
+    if (identifier.node->type == "String")
+    {
+      std::cout << identifier.node->value << std::endl;
+    }
+    else if (identifier.node->type == "number")
     {
       int val = PrintEvaluate(*identifier.node, 0);
 
       std::cout << val << std::endl;
     }
+    else if (identifier.node->type == "var")
+    {
+      std::variant<int, std::string, bool> val = environment.GetVAR(identifier.node->value);
+      std::visit([](const auto &value){ std::cout << value << std::endl; }, val);
+    }
+  }
+  else if (identifier.type == "var")
+  {
+    if (identifier.node->type != "String")
+    {
+      int val = PrintEvaluate(*identifier.node, 0);
+      environment.CreatingVAR(identifier.identifer, val);
+    }
     else
     {
-      std::cout << identifier.node->value << std::endl;
+      environment.CreatingVAR(identifier.identifer, identifier.node->value);
     }
   }
   else

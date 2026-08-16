@@ -11,7 +11,7 @@ void Lexer::TransformTokens(std::string line)
     for (size_t i = 0; i < line.size(); i++)
     {
         auto c = line[i];
-        
+
         if (c == '"')
         {
             std::string value;
@@ -70,6 +70,11 @@ void Lexer::TransformTokens(std::string line)
                 tokens.EXPRESSION.push_back(
                     {TokenType::Print, current});
             }
+            else if (current == "var")
+            {
+                tokens.EXPRESSION.push_back(
+                    {TokenType::Var, current});
+            }
             else
             {
                 tokens.EXPRESSION.push_back(
@@ -111,6 +116,10 @@ void Lexer::TransformTokens(std::string line)
 
         case '"':
             tokens.EXPRESSION.push_back({TokenType::Aspas, "\""});
+            break;
+
+        case '=':
+            tokens.EXPRESSION.push_back({TokenType::Receives, "="});
             break;
 
         default:
