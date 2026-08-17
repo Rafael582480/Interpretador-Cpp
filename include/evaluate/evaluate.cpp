@@ -33,8 +33,7 @@ Evaluate::Evaluate(ParserPrimary::Identifier identifier)
 
       if (val.type == "String")
       {
-        std::visit([](const auto &value)
-                   { std::cout << value << std::endl; }, val.value);
+        std::visit([](const auto &value){ std::cout << value << std::endl; }, val.value);
       }
       else
       {

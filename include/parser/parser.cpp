@@ -29,6 +29,7 @@ std::unique_ptr<ParserPrimary::Node> Term(const std::vector<Lexer::Tokens> &Toke
   {
 
     auto newTree = std::make_unique<ParserPrimary::Node>();
+
     if (Tokens[i].lexeme == "*" || Tokens[i].lexeme == "/")
     {
       newTree->type = "operator";
@@ -46,7 +47,7 @@ std::unique_ptr<ParserPrimary::Node> Term(const std::vector<Lexer::Tokens> &Toke
       }
 
       right->value = Tokens[i + 1].lexeme;
-      
+
       newTree->right = std::move(right);
 
       newTree->left = std::move(tree);
@@ -92,6 +93,11 @@ std::unique_ptr<ParserPrimary::Node> Expression(Lexer::TOKENS Tokens)
     tks.clear();
   }
 
+  if (tree->value.empty())
+  {
+    return Term(tks);
+  }
+
   tree->left = Term(tks);
 
   return tree;
@@ -130,10 +136,10 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS To
   }
   else
   {
-    if (Tokens.EXPRESSION.size() == 1 &&
-        Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
+    if (Tokens.EXPRESSION.size() == 1)
     {
-      tree = String(Tokens);
+      tree->type = "var";
+      tree->value = Tokens.EXPRESSION[0].lexeme;
     }
     else
     {
