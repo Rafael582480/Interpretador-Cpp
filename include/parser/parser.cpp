@@ -6,11 +6,19 @@
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
 
-std::unique_ptr<ParserPrimary::Node> Term(std::vector<std::string> Tokens)
+std::unique_ptr<ParserPrimary::Node> Term(const std::vector<Lexer::Tokens> &Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
-  tree->type = "number";
-  tree->value = Tokens[0];
+  if (Tokens[0].type == Lexer::TokenType::Number)
+  {
+    tree->type = "number";
+    tree->value = Tokens[0].lexeme;
+  }
+  else if (Tokens[0].type == Lexer::TokenType::Identifier)
+  {
+    tree->type = "var";
+    tree->value = Tokens[0].lexeme;
+  }
 
   if (Tokens.size() == 1)
   {
@@ -19,15 +27,26 @@ std::unique_ptr<ParserPrimary::Node> Term(std::vector<std::string> Tokens)
 
   for (int i = 1; i < Tokens.size(); i++)
   {
+
     auto newTree = std::make_unique<ParserPrimary::Node>();
-    if (Tokens[i] == "*" || Tokens[i] == "/")
+    if (Tokens[i].lexeme == "*" || Tokens[i].lexeme == "/")
     {
       newTree->type = "operator";
-      newTree->value = Tokens[i];
+      newTree->value = Tokens[i].lexeme;
 
       auto right = std::make_unique<ParserPrimary::Node>();
-      right->type = "number";
-      right->value = Tokens[i + 1];
+
+      if (Tokens[i + 1].type == Lexer::TokenType::Number)
+      {
+        right->type = "number";
+      }
+      else if (Tokens[i + 1].type == Lexer::TokenType::Identifier)
+      {
+        right->type = "var";
+      }
+
+      right->value = Tokens[i + 1].lexeme;
+      
       newTree->right = std::move(right);
 
       newTree->left = std::move(tree);
@@ -42,14 +61,24 @@ std::unique_ptr<ParserPrimary::Node> Term(std::vector<std::string> Tokens)
 std::unique_ptr<ParserPrimary::Node> Expression(Lexer::TOKENS Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
-  std::vector<std::string> tks;
+
+  if (Tokens.EXPRESSION.size() == 1)
+  {
+
+    tree->type = "number";
+    tree->value = Tokens.EXPRESSION[0].lexeme;
+
+    return tree;
+  }
+
+  std::vector<Lexer::Tokens> tks;
 
   for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
   {
     auto newTree = std::make_unique<ParserPrimary::Node>();
     if (Tokens.EXPRESSION[i].lexeme != "+" && Tokens.EXPRESSION[i].lexeme != "-")
     {
-      tks.push_back(Tokens.EXPRESSION[i].lexeme);
+      tks.push_back(Tokens.EXPRESSION[i]);
       continue;
     }
 
@@ -98,9 +127,18 @@ std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS To
   else if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
   {
     tree = Expression(Tokens);
-  } else {
-    tree->type = "var";
-    tree->value = Tokens.EXPRESSION[0].lexeme;
+  }
+  else
+  {
+    if (Tokens.EXPRESSION.size() == 1 &&
+        Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
+    {
+      tree = String(Tokens);
+    }
+    else
+    {
+      tree = Expression(Tokens);
+    }
   }
 
   return tree;

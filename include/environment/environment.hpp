@@ -11,6 +11,7 @@ public:
   {
     std::string name;
     std::variant<int, std::string, bool> value;
+    std::string type;
   };
 
   struct Variaveis
@@ -20,21 +21,30 @@ public:
 
   Variaveis variaveis;
 
-  void CreatingVAR(std::string name, std::variant<int, std::string, bool> value)
-  {
-    variaveis.vars.push_back({ name, value });
-  }
-
-  std::variant<int, std::string, bool> GetVAR(std::string name)
+  void CreatingVAR(std::string name, std::string type, std::variant<int, std::string, bool> value)
   {
     for (int i = 0; i < variaveis.vars.size(); i++)
     {
       if (variaveis.vars[i].name == name)
       {
-        return variaveis.vars[i].value;
+        variaveis.vars[i].value = value;
+        variaveis.vars[i].type = type;
+
+        break;
       }
     }
 
-    return "Variable not declaration";
+    variaveis.vars.push_back({name, value, type});
+  };
+
+  Variables GetVAR(std::string name)
+  {
+    for (int i = 0; i < variaveis.vars.size(); i++)
+    {
+      if (variaveis.vars[i].name == name)
+      {
+        return variaveis.vars[i];
+      }
+    }
   }
 };

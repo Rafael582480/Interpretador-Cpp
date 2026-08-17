@@ -2,18 +2,24 @@
 #include "../parser/parser.hpp"
 #include "../environment/environment.hpp"
 #include <memory>
+#include <iostream>
 #include <variant>
 
 Environment environment;
 
 Evaluate::Evaluate(ParserPrimary::Identifier identifier)
 {
-
   if (identifier.type == "print")
   {
     if (identifier.node->type == "String")
     {
       std::cout << identifier.node->value << std::endl;
+    }
+    else if (identifier.node->type == "operator")
+    {
+      int val = PrintEvaluate(*identifier.node, 0);
+
+      std::cout << val << std::endl;
     }
     else if (identifier.node->type == "number")
     {
@@ -23,8 +29,18 @@ Evaluate::Evaluate(ParserPrimary::Identifier identifier)
     }
     else if (identifier.node->type == "var")
     {
-      std::variant<int, std::string, bool> val = environment.GetVAR(identifier.node->value);
-      std::visit([](const auto &value){ std::cout << value << std::endl; }, val);
+      auto val = environment.GetVAR(identifier.node->value);
+
+      if (val.type == "String")
+      {
+        std::visit([](const auto &value)
+                   { std::cout << value << std::endl; }, val.value);
+      }
+      else
+      {
+        std::visit([](const auto &value)
+                   { std::cout << value << std::endl; }, val.value);
+      }
     }
   }
   else if (identifier.type == "var")
@@ -32,11 +48,11 @@ Evaluate::Evaluate(ParserPrimary::Identifier identifier)
     if (identifier.node->type != "String")
     {
       int val = PrintEvaluate(*identifier.node, 0);
-      environment.CreatingVAR(identifier.identifer, val);
+      environment.CreatingVAR(identifier.identifer, identifier.node->type, val);
     }
     else
     {
-      environment.CreatingVAR(identifier.identifer, identifier.node->value);
+      environment.CreatingVAR(identifier.identifer, identifier.node->type, identifier.node->value);
     }
   }
   else
@@ -83,6 +99,13 @@ int Evaluate::PrintEvaluate(ParserPrimary::Node &node, int pos = 0)
     {
       return right / left;
     }
+  }
+
+  if (node.type == "var")
+  {
+    auto val = environment.GetVAR(node.value);
+
+    return std::get<int>(val.value);
   }
 
   return 0;
