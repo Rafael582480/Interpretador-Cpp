@@ -24,10 +24,14 @@ public:
     LeftParen,
     RightParen,
     Semicolon,
+    Equality,
 
     Name,
     Print,
     Var,
+    If,
+    Open,
+    End,
 
     EndOfFile
   };

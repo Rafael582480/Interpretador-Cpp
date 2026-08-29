@@ -75,12 +75,32 @@ void Lexer::TransformTokens(std::string line)
                 tokens.EXPRESSION.push_back(
                     {TokenType::Var, current});
             }
+            else if (current == "if")
+            {
+                tokens.EXPRESSION.push_back(
+                    {TokenType::If, current});
+            }
             else
             {
                 tokens.EXPRESSION.push_back(
                     {TokenType::Identifier, current});
             }
 
+            continue;
+        }
+
+        if (c == '=')
+        {
+            if (line[i + 1] == '=')
+            {
+                tokens.EXPRESSION.push_back({TokenType::Equality, "=="});
+            }
+            else
+            {
+                tokens.EXPRESSION.push_back({TokenType::Receives, "="});
+            }
+
+            i++;
             continue;
         }
 
@@ -118,8 +138,8 @@ void Lexer::TransformTokens(std::string line)
             tokens.EXPRESSION.push_back({TokenType::Aspas, "\""});
             break;
 
-        case '=':
-            tokens.EXPRESSION.push_back({TokenType::Receives, "="});
+        case ':':
+            tokens.EXPRESSION.push_back({TokenType::Open, ":"});
             break;
 
         default:

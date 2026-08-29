@@ -122,9 +122,61 @@ std::unique_ptr<ParserPrimary::Node> String(Lexer::TOKENS Tokens)
   return tree;
 }
 
+std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens)
+{
+  auto tree = std::make_unique<ParserPrimary::Node>();
+
+  tree->type = "Equality";
+  tree->value = "==";
+
+  auto right = std::make_unique<ParserPrimary::Node>();
+  if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
+  {
+    right->type = "Number";
+  }
+  else if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Identifier)
+  {
+    right->type = "var";
+  }
+  else
+  {
+    right->type = "String";
+  }
+  right->value = Tokens.EXPRESSION[0].lexeme;
+
+  auto left = std::make_unique<ParserPrimary::Node>();
+  if (Tokens.EXPRESSION[2].type == Lexer::TokenType::Number)
+  {
+    left->type = "Number";
+  }
+  else if (Tokens.EXPRESSION[2].type == Lexer::TokenType::Identifier)
+  {
+    left->type = "var";
+  }
+  else
+  {
+    left->type = "String";
+  }
+  left->value = Tokens.EXPRESSION[2].lexeme;
+
+  tree->right = std::move(right);
+  tree->left = std::move(left);
+
+  return tree;
+}
+
 std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
+
+  for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
+  {
+    if (Tokens.EXPRESSION[i].type == Lexer::TokenType::Equality)
+    {
+      tree = Bool(Tokens);
+      return tree;
+    }
+  }
 
   if (Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
   {
