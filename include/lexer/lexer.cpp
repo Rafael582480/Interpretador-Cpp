@@ -80,11 +80,6 @@ void Lexer::TransformTokens(std::string line)
                 tokens.EXPRESSION.push_back(
                     {TokenType::If, current});
             }
-            else
-            {
-                tokens.EXPRESSION.push_back(
-                    {TokenType::Identifier, current});
-            }
 
             continue;
         }

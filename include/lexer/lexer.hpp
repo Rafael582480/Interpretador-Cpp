@@ -26,10 +26,10 @@ public:
     Semicolon,
     Equality,
 
-    Name,
-    Print,
-    Var,
     If,
+    Var,
+    Print,
+    Name,
     Open,
     End,
 

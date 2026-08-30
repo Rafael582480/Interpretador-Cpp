@@ -6,7 +6,7 @@
 class Evaluate
 {
 public:
-  Evaluate(ParserPrimary::Identifier identifier);
+  Evaluate(std::vector<ParserPrimary::Identifier> identifier);
 
   int PrintEvaluate(ParserPrimary::Node& node, int pos);
 };

@@ -2,6 +2,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <variant>
+
 #include "parser.hpp"
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
@@ -111,11 +113,6 @@ std::unique_ptr<ParserPrimary::Node> String(Lexer::TOKENS Tokens)
 
   for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
   {
-    if (Tokens.EXPRESSION[i].lexeme == "'")
-    {
-      continue;
-    }
-
     tree->value += Tokens.EXPRESSION[i].lexeme;
   }
 
@@ -165,39 +162,88 @@ std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens)
   return tree;
 }
 
-std::unique_ptr<ParserPrimary::Node> ParserPrimary::ParserPrint(Lexer::TOKENS Tokens)
+void ParserPrimary::parserPrint(Lexer::TOKENS tokens)
 {
-  auto tree = std::make_unique<ParserPrimary::Node>();
+  int sintax = 0;
 
-  for (int i = 0; i < Tokens.EXPRESSION.size(); i++)
+  Lexer::TOKENS expression;
+  std::string TipagemPrint;
+
+  while (current < tokens.EXPRESSION.size())
   {
-    if (Tokens.EXPRESSION[i].type == Lexer::TokenType::Equality)
+    if (Check(Lexer::TokenType::LeftParen, tokens))
     {
-      tree = Bool(Tokens);
-      return tree;
+      sintax++;
+      current++;
     }
-  }
-
-  if (Tokens.EXPRESSION[0].type == Lexer::TokenType::String)
-  {
-    tree = String(Tokens);
-  }
-  else if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
-  {
-    tree = Expression(Tokens);
-  }
-  else
-  {
-    if (Tokens.EXPRESSION.size() == 1)
+    else if (Check(Lexer::TokenType::RightParen, tokens))
     {
-      tree->type = "var";
-      tree->value = Tokens.EXPRESSION[0].lexeme;
+      sintax++;
+
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Semicolon, tokens))
+    {
+      current++;
+      break;
+    }
+    else if (Check(Lexer::TokenType::Aspas, tokens))
+    {
+      TipagemPrint = "string";
+      current++;
+    }
+    else if (Check(Lexer::TokenType::String, tokens))
+    {
+      TipagemPrint = "string";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
     }
     else
     {
-      tree = Expression(Tokens);
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
     }
   }
 
-  return tree;
+  if (sintax < 2)
+  {
+    std::cout << "Error" << std::endl;
+  }
+
+  std::unique_ptr<ParserPrimary::Node> AST;
+
+  if (TipagemPrint == "string")
+  {
+    AST = String(expression);
+    ParserPrimary::Statements.push_back({"print", "string", std::move(AST)});
+  }
+  else
+  {
+    AST = Expression(expression);
+    ParserPrimary::Statements.push_back({"print", "expression", std::move(AST)});
+  }
 }
+
+void ParserPrimary::parserVar(std::vector<Lexer::Tokens> tokens)
+{
+}
+
+bool ParserPrimary::Check(Lexer::TokenType type, Lexer::TOKENS tokens)
+{
+  if (tokens.EXPRESSION.empty())
+    return false;
+  return tokens.EXPRESSION[current].type == type;
+}
+
+void ParserPrimary::parserStatement(Lexer::TOKENS tokens)
+{
+  if (Check(Lexer::TokenType::Print, tokens))
+  {
+    current++;
+    parserPrint(tokens);
+  }
+  else
+  {
+    current++;
+  }
+};

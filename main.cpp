@@ -2,6 +2,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "./include/lexer/lexer.hpp"
 #include "./include/parser/parser.hpp"
@@ -9,6 +10,7 @@
 
 int main()
 {
+  std::string source;
   std::string line;
   std::ifstream Arquivo("./test/txt.txt");
 
@@ -18,19 +20,16 @@ int main()
     {
       continue;
     }
-
-    Lexer lexer(line);
-    Lexer::TOKENS token = lexer.getTokens();
-
-    if (token.EXPRESSION.empty())
-    {
-      continue;
-    }
-
-    ParserPrimary parser(token);
-
-    Evaluate evaluate(std::move(parser.identifierNode));
+    source+=line;
+    source+='\n';
   }
+
+  Lexer lexer(source);
+  Lexer::TOKENS tokens = lexer.getTokens();
+
+  ParserPrimary parser(tokens);
+
+  Evaluate evaluate(std::move(parser.Statements));
 
   Arquivo.close();
 
