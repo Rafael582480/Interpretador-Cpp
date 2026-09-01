@@ -7,9 +7,8 @@
 
 Environment environment;
 
-Evaluate::Evaluate(std::vector<ParserPrimary::Node> identifier)
+Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 {
-
   for (int i = 0; i < identifier.size(); i++)
   {
     if (identifier[i].type == "print")
@@ -162,6 +161,14 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> identifier)
             identifier[i].identifer,
             identifier[i].type,
             identifier[i].left->value);
+      }
+    }
+    else if (identifier[i].type == "If")
+    {
+      bool result = identifier[i].condition->left->value == identifier[i].condition->right->value;
+      if (result)
+      {
+        Evaluate eval(identifier[i].Statements);
       }
     }
     else

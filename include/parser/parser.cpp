@@ -172,7 +172,7 @@ std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens)
   return tree;
 }
 
-void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Statements)
+void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
 {
   int sintax = 0;
 
@@ -181,34 +181,34 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
 
   while (current < tokens.EXPRESSION.size())
   {
-    if (Check(Lexer::TokenType::LeftParen, tokens))
+    if (Check(Lexer::TokenType::LeftParen, tokens, current))
     {
       sintax++;
       current++;
     }
-    else if (Check(Lexer::TokenType::RightParen, tokens))
+    else if (Check(Lexer::TokenType::RightParen, tokens, current))
     {
       sintax++;
 
       current++;
     }
-    else if (Check(Lexer::TokenType::Semicolon, tokens))
+    else if (Check(Lexer::TokenType::Semicolon, tokens, current))
     {
       current++;
       break;
     }
-    else if (Check(Lexer::TokenType::Aspas, tokens))
+    else if (Check(Lexer::TokenType::Aspas, tokens, current))
     {
       TipagemPrint = "string";
       current++;
     }
-    else if (Check(Lexer::TokenType::String, tokens))
+    else if (Check(Lexer::TokenType::String, tokens, current))
     {
       TipagemPrint = "string";
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
       current++;
     }
-    else if (Check(Lexer::TokenType::Equality, tokens))
+    else if (Check(Lexer::TokenType::Equality, tokens, current))
     {
       TipagemPrint = "bool";
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
@@ -253,7 +253,7 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
   }
 }
 
-void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statements)
+void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
 {
   Lexer::TOKENS expression;
   std::string TipagemVariavel;
@@ -261,27 +261,27 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
 
   while (current < tokens.EXPRESSION.size())
   {
-    if (Check(Lexer::TokenType::Identifier, tokens))
+    if (Check(Lexer::TokenType::Identifier, tokens, current))
     {
       nameVariavel = tokens.EXPRESSION[current].lexeme;
       current++;
     }
-    else if (Check(Lexer::TokenType::Receives, tokens))
+    else if (Check(Lexer::TokenType::Receives, tokens, current))
     {
       current++;
     }
-    else if (Check(Lexer::TokenType::Semicolon, tokens))
+    else if (Check(Lexer::TokenType::Semicolon, tokens, current))
     {
       current++;
       break;
     }
-    else if (Check(Lexer::TokenType::String, tokens))
+    else if (Check(Lexer::TokenType::String, tokens, current))
     {
       TipagemVariavel = "string";
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
       current++;
     }
-    else if (Check(Lexer::TokenType::Equality, tokens))
+    else if (Check(Lexer::TokenType::Equality, tokens, current))
     {
       TipagemVariavel = "bool";
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
@@ -328,7 +328,7 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
   }
 }
 
-void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements)
+void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
 {
   Lexer::TOKENS condition;
   bool hasCondition = false;
@@ -340,11 +340,11 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
   {
     if (!hasCondition)
     {
-      if (Check(Lexer::TokenType::LeftParen, tokens))
+      if (Check(Lexer::TokenType::LeftParen, tokens, current))
       {
         current++;
       }
-      else if (Check(Lexer::TokenType::RightParen, tokens))
+      else if (Check(Lexer::TokenType::RightParen, tokens, current))
       {
         current++;
         hasCondition = true;
@@ -357,11 +357,11 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
     }
     else
     {
-      if (Check(Lexer::TokenType::OpenBlock, tokens))
+      if (Check(Lexer::TokenType::OpenBlock, tokens, current))
       {
         current++;
       }
-      else if (Check(Lexer::TokenType::EndBlock, tokens))
+      else if (Check(Lexer::TokenType::EndBlock, tokens, current))
       {
         current++;
         break;
@@ -373,37 +373,39 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
       }
     }
   }
+  
+  int currentBody = 0;
 
-  parserStatement(Lexer::TOKENS{body}, ifStatement.Statements);
-  ifStatement.condition = condition.EXPRESSION;
+  parserStatement(Lexer::TOKENS{body}, ifStatement.Statements, currentBody);
 
+  ifStatement.condition = Bool(condition);
+  ifStatement.type = "If";
   Statements.push_back(std::move(ifStatement));
 }
 
-bool ParserPrimary::Check(Lexer::TokenType type, Lexer::TOKENS tokens)
+bool ParserPrimary::Check(Lexer::TokenType type, Lexer::TOKENS tokens, int &current)
 {
   if (current >= tokens.EXPRESSION.size())
     return false;
   return tokens.EXPRESSION[current].type == type;
 }
 
-void ParserPrimary::parserStatement(Lexer::TOKENS tokens, std::vector<Node> &Statements)
+void ParserPrimary::parserStatement(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
 {
-  if (Check(Lexer::TokenType::Print, tokens))
+  if (Check(Lexer::TokenType::Print, tokens, current))
   {
     current++;
-    parserPrint(tokens, Statements);
+    parserPrint(tokens, Statements, current);
   }
-  else if (Check(Lexer::TokenType::Var, tokens))
+  else if (Check(Lexer::TokenType::Var, tokens, current))
   {
     current++;
-    parserVar(tokens, Statements);
+    parserVar(tokens, Statements, current);
   }
-  else if (Check(Lexer::TokenType::If, tokens))
+  else if (Check(Lexer::TokenType::If, tokens, current))
   {
-    std::cout << "If statement not implemented yet" << std::endl;
     current++;
-    parserIf(tokens, Statements);
+    parserIf(tokens, Statements, current);
   }
   else
   {

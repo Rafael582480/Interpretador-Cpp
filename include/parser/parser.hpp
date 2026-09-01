@@ -15,7 +15,7 @@ class ParserPrimary
 public:
   struct Node
   {
-    std::vector<Lexer::Tokens> condition;
+    std::unique_ptr<Node> condition;
     std::vector<Node> Statements;
     std::string identifer;
     std::string type;
@@ -31,15 +31,15 @@ public:
   {
     while (current < tokens.EXPRESSION.size())
     {
-      parserStatement(tokens, Statements);
+      parserStatement(tokens, Statements, current);
     }
   }
 
-  void parserStatement(Lexer::TOKENS tokens, std::vector<Node> &Statements);
+  void parserStatement(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current);
 
-  void parserPrint(Lexer::TOKENS, std::vector<Node> &Statements);
-  void parserVar(Lexer::TOKENS, std::vector<Node> &Statements);
-  void parserIf(Lexer::TOKENS, std::vector<Node> &Statements);
+  void parserPrint(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
+  void parserVar(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
+  void parserIf(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
 
-  bool Check(Lexer::TokenType type, Lexer::TOKENS tokens);
+  bool Check(Lexer::TokenType type, Lexer::TOKENS tokens, int &current);
 };

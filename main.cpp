@@ -29,7 +29,7 @@ int main()
 
   ParserPrimary parser(tokens);
 
-  Evaluate evaluate(std::move(parser.Statements));
+  Evaluate evaluate(parser.Statements);
 
   Arquivo.close();
 
