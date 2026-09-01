@@ -23,6 +23,8 @@ public:
     Aspas,
     LeftParen,
     RightParen,
+    OpenBlock,
+    EndBlock,
     Semicolon,
     Equality,
 

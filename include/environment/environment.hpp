@@ -45,5 +45,7 @@ public:
         return variaveis.vars[i];
       }
     }
-  }
+
+    throw std::runtime_error("Variável não encontrada");
+   }
 };

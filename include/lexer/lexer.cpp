@@ -130,6 +130,14 @@ void Lexer::TransformTokens(std::string line)
             tokens.EXPRESSION.push_back({TokenType::RightParen, ")"});
             break;
 
+        case '{':
+            tokens.EXPRESSION.push_back({TokenType::OpenBlock, "{"});
+            break;
+
+        case '}':
+            tokens.EXPRESSION.push_back({TokenType::EndBlock, "}"});
+            break;
+
         case ';':
             tokens.EXPRESSION.push_back({TokenType::Semicolon, ";"});
             break;

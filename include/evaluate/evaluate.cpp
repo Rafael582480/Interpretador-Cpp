@@ -7,32 +7,39 @@
 
 Environment environment;
 
-Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
+Evaluate::Evaluate(std::vector<ParserPrimary::Node> identifier)
 {
 
   for (int i = 0; i < identifier.size(); i++)
   {
     if (identifier[i].type == "print")
     {
-      if (identifier[i].node->type == "String")
+      auto &expr = identifier[i].left;
+      if (!expr)
       {
-        std::cout << identifier[i].node->value << std::endl;
+        std::cout << "Error de expressao" << std::endl;
+        continue;
       }
-      else if (identifier[i].node->type == "operator")
+
+      if (expr->type == "String")
       {
-        int val = PrintEvaluate(*identifier[i].node, 0);
+        std::cout << expr->value << std::endl;
+      }
+      else if (expr->type == "operator")
+      {
+        int val = PrintEvaluate(*expr, 0);
 
         std::cout << val << std::endl;
       }
-      else if (identifier[i].node->type == "number")
+      else if (expr->type == "number")
       {
-        int val = PrintEvaluate(*identifier[i].node, 0);
+        int val = PrintEvaluate(*expr, 0);
 
         std::cout << val << std::endl;
       }
-      else if (identifier[i].node->type == "var")
+      else if (expr->type == "var")
       {
-        auto val = environment.GetVAR(identifier[i].node->value);
+        auto val = environment.GetVAR(expr->value);
 
         if (val.type == "String")
         {
@@ -56,30 +63,30 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
                      { std::cout << value << std::endl; }, val.value);
         }
       }
-      else if (identifier[i].node->type == "Equality")
+      else if (expr->type == "Equality")
       {
-        if (identifier[i].node->right->type == "var" || identifier[i].node->left->type == "var")
+        if (expr->right && (expr->right->type == "var" || (expr->left && expr->left->type == "var")))
         {
-          if (identifier[i].node->right->type == "var")
+          if (expr->right->type == "var")
           {
-            auto val = environment.GetVAR(identifier[i].node->right->value);
+            auto val = environment.GetVAR(expr->right->value);
             if (std::holds_alternative<std::string>(val.value))
             {
-              if (std::get<std::string>(val.value) == identifier[i].node->left->value)
+              if (expr->left && std::get<std::string>(val.value) == expr->left->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
             }
             else if (std::holds_alternative<int>(val.value))
             {
-              if (std::to_string(std::get<int>(val.value)) == identifier[i].node->left->value)
+              if (expr->left && std::to_string(std::get<int>(val.value)) == expr->left->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
             }
             else if (std::holds_alternative<bool>(val.value))
             {
-              if ((std::get<bool>(val.value) ? "true" : "false") == identifier[i].node->left->value)
+              if (expr->left && (std::get<bool>(val.value) ? "true" : "false") == expr->left->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
@@ -89,26 +96,26 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
               std::cout << "false" << std::endl;
             }
           }
-          else
+          else if (expr->left)
           {
-            auto val = environment.GetVAR(identifier[i].node->left->value);
+            auto val = environment.GetVAR(expr->left->value);
             if (std::holds_alternative<std::string>(val.value))
             {
-              if (std::get<std::string>(val.value) == identifier[i].node->right->value)
+              if (expr->right && std::get<std::string>(val.value) == expr->right->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
             }
             else if (std::holds_alternative<int>(val.value))
             {
-              if (std::to_string(std::get<int>(val.value)) == identifier[i].node->right->value)
+              if (expr->right && std::to_string(std::get<int>(val.value)) == expr->right->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
             }
             else if (std::holds_alternative<bool>(val.value))
             {
-              if ((std::get<bool>(val.value) ? "true" : "false") == identifier[i].node->right->value)
+              if (expr->right && (std::get<bool>(val.value) ? "true" : "false") == expr->right->value)
                 std::cout << "true" << std::endl;
               else
                 std::cout << "false" << std::endl;
@@ -119,9 +126,9 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
             }
           }
         }
-        else
+        else if (expr->right && expr->left)
         {
-          if (identifier[i].node->right->value == identifier[i].node->left->value)
+          if (expr->right->value == expr->left->value)
           {
             std::cout << "true" << std::endl;
           }
@@ -134,27 +141,27 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
     }
     else if (identifier[i].type == "var")
     {
-      if (identifier[i].node->type == "Equality")
+      if (identifier[i].left->type == "Equality")
       {
-        bool result = identifier[i].node->left->value == identifier[i].node->right->value;
+        bool result = identifier[i].left->left->value == identifier[i].left->right->value;
 
         environment.CreatingVAR(identifier[i].identifer, "Equality", result);
       }
-      else if (identifier[i].node->type != "String")
+      else if (identifier[i].left->type != "String")
       {
-        int val = PrintEvaluate(*identifier[i].node, 0);
+        int val = PrintEvaluate(*identifier[i].left, 0);
 
         environment.CreatingVAR(
             identifier[i].identifer,
-            identifier[i].node->type,
+            identifier[i].type,
             val);
       }
       else
       {
         environment.CreatingVAR(
             identifier[i].identifer,
-            identifier[i].node->type,
-            identifier[i].node->value);
+            identifier[i].type,
+            identifier[i].left->value);
       }
     }
     else
