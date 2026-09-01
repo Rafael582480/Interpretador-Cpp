@@ -10,7 +10,7 @@ Environment environment;
 Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
 {
 
-  for(int i=0; i < identifier.size(); i++)
+  for (int i = 0; i < identifier.size(); i++)
   {
     if (identifier[i].type == "print")
     {
@@ -21,19 +21,19 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
       else if (identifier[i].node->type == "operator")
       {
         int val = PrintEvaluate(*identifier[i].node, 0);
-  
+
         std::cout << val << std::endl;
       }
       else if (identifier[i].node->type == "number")
       {
         int val = PrintEvaluate(*identifier[i].node, 0);
-  
+
         std::cout << val << std::endl;
       }
       else if (identifier[i].node->type == "var")
       {
         auto val = environment.GetVAR(identifier[i].node->value);
-  
+
         if (val.type == "String")
         {
           std::visit([](const auto &value)
@@ -137,13 +137,13 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
       if (identifier[i].node->type == "Equality")
       {
         bool result = identifier[i].node->left->value == identifier[i].node->right->value;
-  
+
         environment.CreatingVAR(identifier[i].identifer, "Equality", result);
       }
       else if (identifier[i].node->type != "String")
       {
         int val = PrintEvaluate(*identifier[i].node, 0);
-  
+
         environment.CreatingVAR(
             identifier[i].identifer,
             identifier[i].node->type,
@@ -162,7 +162,6 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Identifier> identifier)
       std::cout << "Error de identificaçao" << std::endl;
     }
   }
-
 }
 
 int printNodeInfo(ParserPrimary::Node &node, int pos)

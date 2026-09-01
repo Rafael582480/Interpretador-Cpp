@@ -48,7 +48,7 @@ public:
   void parserStatement(Lexer::TOKENS tokens);
 
   void parserPrint(Lexer::TOKENS);
-  void parserVar(std::vector<Lexer::Tokens> tokens);
+  void parserVar(Lexer::TOKENS);
 
   bool Check(Lexer::TokenType type, Lexer::TOKENS tokens);
 };

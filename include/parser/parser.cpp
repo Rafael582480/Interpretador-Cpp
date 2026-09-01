@@ -11,6 +11,10 @@
 std::unique_ptr<ParserPrimary::Node> Term(const std::vector<Lexer::Tokens> &Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
+
+  if (Tokens.empty())
+    return nullptr;
+
   if (Tokens[0].type == Lexer::TokenType::Number)
   {
     tree->type = "number";
@@ -27,7 +31,7 @@ std::unique_ptr<ParserPrimary::Node> Term(const std::vector<Lexer::Tokens> &Toke
     return tree;
   }
 
-  for (int i = 1; i < Tokens.size(); i++)
+  for (size_t i = 1; i + 1 < Tokens.size(); i++)
   {
 
     auto newTree = std::make_unique<ParserPrimary::Node>();
@@ -67,8 +71,15 @@ std::unique_ptr<ParserPrimary::Node> Expression(Lexer::TOKENS Tokens)
 
   if (Tokens.EXPRESSION.size() == 1)
   {
+    if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
+    {
+      tree->type = "number";
+    }
+    else if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Identifier)
+    {
+      tree->type = "var";
+    }
 
-    tree->type = "number";
     tree->value = Tokens.EXPRESSION[0].lexeme;
 
     return tree;
@@ -194,7 +205,12 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens)
     }
     else if (Check(Lexer::TokenType::String, tokens))
     {
-      TipagemPrint = "string";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Equality, tokens))
+    {
+      TipagemPrint = "bool";
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
       current++;
     }
@@ -215,22 +231,83 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens)
   if (TipagemPrint == "string")
   {
     AST = String(expression);
-    ParserPrimary::Statements.push_back({"print", "string", std::move(AST)});
+    ParserPrimary::Statements.push_back({"print", "", std::move(AST)});
+  }
+  else if (TipagemPrint == "bool")
+  {
+    AST = Bool(expression);
+    ParserPrimary::Statements.push_back({"print", "", std::move(AST)});
   }
   else
   {
     AST = Expression(expression);
-    ParserPrimary::Statements.push_back({"print", "expression", std::move(AST)});
+    ParserPrimary::Statements.push_back({"print", "", std::move(AST)});
   }
 }
 
-void ParserPrimary::parserVar(std::vector<Lexer::Tokens> tokens)
+void ParserPrimary::parserVar(Lexer::TOKENS tokens)
 {
+  Lexer::TOKENS expression;
+  std::string TipagemVariavel;
+  std::string nameVariavel;
+
+  while (current < tokens.EXPRESSION.size())
+  {
+    if (Check(Lexer::TokenType::Identifier, tokens))
+    {
+      nameVariavel = tokens.EXPRESSION[current].lexeme;
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Receives, tokens))
+    {
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Semicolon, tokens))
+    {
+      current++;
+      break;
+    }
+    else if (Check(Lexer::TokenType::String, tokens))
+    {
+      TipagemVariavel = "string";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Equality, tokens))
+    {
+      TipagemVariavel = "bool";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else
+    {
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+  }
+
+  std::unique_ptr<ParserPrimary::Node> AST;
+
+  if (TipagemVariavel == "string")
+  {
+    AST = String(expression);
+    ParserPrimary::Statements.push_back({"var", nameVariavel, std::move(AST)});
+  }
+  else if (TipagemVariavel == "bool")
+  {
+    AST = Bool(expression);
+    ParserPrimary::Statements.push_back({"var", nameVariavel, std::move(AST)});
+  }
+  else
+  {
+    AST = Expression(expression);
+    ParserPrimary::Statements.push_back({"var", nameVariavel, std::move(AST)});
+  }
 }
 
 bool ParserPrimary::Check(Lexer::TokenType type, Lexer::TOKENS tokens)
 {
-  if (tokens.EXPRESSION.empty())
+  if (current >= tokens.EXPRESSION.size())
     return false;
   return tokens.EXPRESSION[current].type == type;
 }
@@ -241,6 +318,11 @@ void ParserPrimary::parserStatement(Lexer::TOKENS tokens)
   {
     current++;
     parserPrint(tokens);
+  }
+  else if (Check(Lexer::TokenType::Var, tokens))
+  {
+    current++;
+    parserVar(tokens);
   }
   else
   {

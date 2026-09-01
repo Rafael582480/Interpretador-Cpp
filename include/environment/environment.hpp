@@ -29,13 +29,12 @@ public:
       {
         variaveis.vars[i].value = value;
         variaveis.vars[i].type = type;
-
-        break;
+        return;
       }
     }
 
     variaveis.vars.push_back({name, value, type});
-  };
+  }
 
   Variables GetVAR(std::string name)
   {
