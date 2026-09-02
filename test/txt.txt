@@ -1,5 +1,8 @@
-var x = 2;
+var x = 10;
+var y = 10;
 
-if (2 == 2) {
-  print(x);
+if (x == y)
+{
+  print("era engual");
 };
+

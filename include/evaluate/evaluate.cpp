@@ -4,6 +4,7 @@
 #include <memory>
 #include <iostream>
 #include <variant>
+#include <type_traits>
 
 Environment environment;
 
@@ -165,10 +166,82 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
     }
     else if (identifier[i].type == "If")
     {
-      bool result = identifier[i].condition->left->value == identifier[i].condition->right->value;
+      auto &condition = identifier[i].condition;
+
+      bool result = false;
+      if (condition->left->type == "var" && condition->right->type == "var")
+      {
+        auto leftValue = environment.GetVAR(condition->left->value).value;
+
+        auto rightValue = environment.GetVAR(condition->right->value).value;
+
+        result = leftValue == rightValue;
+      }
+      else if (condition->left->type == "var")
+      {
+        auto leftValue =
+            environment.GetVAR(condition->left->value).value;
+
+        result = std::visit(
+            [&](const auto &value)
+            {
+              using T = std::decay_t<decltype(value)>;
+
+              if constexpr (std::is_same_v<T, int>)
+              {
+                return std::stoi(condition->right->value) == value;
+              }
+              else if constexpr (std::is_same_v<T, std::string>)
+              {
+                return condition->right->value == value;
+              }
+              else if constexpr (std::is_same_v<T, bool>)
+              {
+                return condition->right->value ==
+                       (value ? "true" : "false");
+              }
+            },
+            leftValue);
+      }
+      else if (condition->right->type == "var")
+      {
+        auto rightValue =
+            environment.GetVAR(condition->right->value).value;
+
+        result = std::visit(
+            [&](const auto &value)
+            {
+              using T = std::decay_t<decltype(value)>;
+
+              if constexpr (std::is_same_v<T, int>)
+              {
+                return condition->left->value == std::to_string(value);
+              }
+              else if constexpr (std::is_same_v<T, std::string>)
+              {
+                return condition->left->value == value;
+              }
+              else if constexpr (std::is_same_v<T, bool>)
+              {
+                return condition->left->value ==
+                       (value ? "true" : "false");
+              }
+            },
+            rightValue);
+      }
+
+      else
+      {
+        result =
+            condition->left->value ==
+            condition->right->value;
+      }
+
       if (result)
       {
-        Evaluate eval(identifier[i].Statements);
+        std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
+
+        Evaluate eval(teste);
       }
     }
     else

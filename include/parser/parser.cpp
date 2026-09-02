@@ -373,10 +373,13 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
       }
     }
   }
-  
+
   int currentBody = 0;
 
-  parserStatement(Lexer::TOKENS{body}, ifStatement.Statements, currentBody);
+  while (currentBody < body.size())
+  {
+    parserStatement(Lexer::TOKENS{body}, ifStatement.Statements, currentBody);
+  }
 
   ifStatement.condition = Bool(condition);
   ifStatement.type = "If";

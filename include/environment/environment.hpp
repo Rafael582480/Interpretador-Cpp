@@ -6,21 +6,21 @@
 
 class Environment
 {
-public:
+  public:
   struct Variables
   {
     std::string name;
     std::variant<int, std::string, bool> value;
     std::string type;
   };
-
+  
   struct Variaveis
   {
     std::vector<Variables> vars;
   };
-
+  
   Variaveis variaveis;
-
+  
   void CreatingVAR(std::string name, std::string type, std::variant<int, std::string, bool> value)
   {
     for (int i = 0; i < variaveis.vars.size(); i++)
@@ -32,10 +32,10 @@ public:
         return;
       }
     }
-
+    
     variaveis.vars.push_back({name, value, type});
   }
-
+  
   Variables GetVAR(std::string name)
   {
     for (int i = 0; i < variaveis.vars.size(); i++)
@@ -45,7 +45,7 @@ public:
         return variaveis.vars[i];
       }
     }
-
+    
     throw std::runtime_error("Variável não encontrada");
-   }
+  }
 };
