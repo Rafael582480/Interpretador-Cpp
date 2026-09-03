@@ -169,86 +169,96 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
       auto &condition = identifier[i].condition;
 
       bool result = false;
-      if (condition->left->type == "var" && condition->right->type == "var")
+
+      if (condition->type != "Equality")
       {
-        auto leftValue = environment.GetVAR(condition->left->value).value;
+        auto val = environment.GetVAR(condition->value);
 
-        auto rightValue = environment.GetVAR(condition->right->value).value;
-
-        result = leftValue == rightValue;
+        result = std::get<bool>(val.value);
       }
-      else if (condition->left->type == "var")
-      {
-        auto leftValue =
-            environment.GetVAR(condition->left->value).value;
-
-        result = std::visit(
-            [&](const auto &value)
-            {
-              using T = std::decay_t<decltype(value)>;
-
-              if constexpr (std::is_same_v<T, int>)
-              {
-                return std::stoi(condition->right->value) == value;
-              }
-              else if constexpr (std::is_same_v<T, std::string>)
-              {
-                return condition->right->value == value;
-              }
-              else if constexpr (std::is_same_v<T, bool>)
-              {
-                return condition->right->value ==
-                       (value ? "true" : "false");
-              }
-            },
-            leftValue);
-      }
-      else if (condition->right->type == "var")
-      {
-        auto rightValue =
-            environment.GetVAR(condition->right->value).value;
-
-        result = std::visit(
-            [&](const auto &value)
-            {
-              using T = std::decay_t<decltype(value)>;
-
-              if constexpr (std::is_same_v<T, int>)
-              {
-                return condition->left->value == std::to_string(value);
-              }
-              else if constexpr (std::is_same_v<T, std::string>)
-              {
-                return condition->left->value == value;
-              }
-              else if constexpr (std::is_same_v<T, bool>)
-              {
-                return condition->left->value ==
-                       (value ? "true" : "false");
-              }
-            },
-            rightValue);
-      }
-
       else
       {
-        result =
-            condition->left->value ==
-            condition->right->value;
+        if (condition->left->type == "var" && condition->right->type == "var")
+        {
+          auto leftValue = environment.GetVAR(condition->left->value).value;
+
+          auto rightValue = environment.GetVAR(condition->right->value).value;
+
+          result = leftValue == rightValue;
+        }
+        else if (condition->left->type == "var")
+        {
+          auto leftValue =
+              environment.GetVAR(condition->left->value).value;
+
+          result = std::visit(
+              [&](const auto &value)
+              {
+                using T = std::decay_t<decltype(value)>;
+
+                if constexpr (std::is_same_v<T, int>)
+                {
+                  return std::stoi(condition->right->value) == value;
+                }
+                else if constexpr (std::is_same_v<T, std::string>)
+                {
+                  return condition->right->value == value;
+                }
+                else if constexpr (std::is_same_v<T, bool>)
+                {
+                  return condition->right->value ==
+                         (value ? "true" : "false");
+                }
+              },
+              leftValue);
+        }
+        else if (condition->right->type == "var")
+        {
+          auto rightValue =
+              environment.GetVAR(condition->right->value).value;
+
+          result = std::visit(
+              [&](const auto &value)
+              {
+                using T = std::decay_t<decltype(value)>;
+
+                if constexpr (std::is_same_v<T, int>)
+                {
+                  return condition->left->value == std::to_string(value);
+                }
+                else if constexpr (std::is_same_v<T, std::string>)
+                {
+                  return condition->left->value == value;
+                }
+                else if constexpr (std::is_same_v<T, bool>)
+                {
+                  return condition->left->value ==
+                         (value ? "true" : "false");
+                }
+              },
+              rightValue);
+        }
+
+        else
+        {
+          result =
+              condition->left->value ==
+              condition->right->value;
+        }
       }
 
-      if (result)
-      {
-        std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
-
-        Evaluate eval(teste);
-      }
-    }
-    else
+    if (result)
     {
-      std::cout << "Error de identificaçao" << std::endl;
+      std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
+
+      Evaluate eval(teste);
     }
   }
+  else
+  {
+    std::cout << "Error de identificaçao" << std::endl;
+  }
+}
 }
 
 int printNodeInfo(ParserPrimary::Node &node, int pos)

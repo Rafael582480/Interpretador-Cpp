@@ -133,6 +133,13 @@ std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
 
+  if (Tokens.EXPRESSION.size() == 1)
+  {
+    tree->type = "Var";
+    tree->value = Tokens.EXPRESSION[0].lexeme;
+    return tree;
+  }
+
   tree->type = "Equality";
   tree->value = "==";
 
