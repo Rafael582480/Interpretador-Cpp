@@ -129,13 +129,19 @@ std::unique_ptr<ParserPrimary::Node> String(Lexer::TOKENS Tokens)
   return tree;
 }
 
-std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens)
+std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens, std::string Tipagem)
 {
   auto tree = std::make_unique<ParserPrimary::Node>();
 
-  if (Tokens.EXPRESSION.size() == 1)
+  if (Tipagem == "bool")
   {
-    tree->type = "Var";
+    tree->type = "boolLiteral";
+    tree->value = Tokens.EXPRESSION[0].lexeme;
+    return tree;
+  }
+  else if (Tipagem == "var")
+  {
+    tree->type = "var";
     tree->value = Tokens.EXPRESSION[0].lexeme;
     return tree;
   }
@@ -185,6 +191,7 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
 
   Lexer::TOKENS expression;
   std::string TipagemPrint;
+  std::string tipegemBool;
 
   while (current < tokens.EXPRESSION.size())
   {
@@ -217,7 +224,32 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
     }
     else if (Check(Lexer::TokenType::Equality, tokens, current))
     {
+      tipegemBool = "equality";
       TipagemPrint = "bool";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Boolean, tokens, current))
+    {
+      if (tipegemBool != "equality")
+      {
+        tipegemBool = "bool";
+      }
+
+      TipagemPrint = "bool";
+
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Var, tokens, current))
+    {
+      if (tipegemBool != "equality")
+      {
+        tipegemBool = "var";
+      }
+
+      TipagemPrint = "bool";
+
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
       current++;
     }
@@ -244,7 +276,19 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
   }
   else if (TipagemPrint == "bool")
   {
-    AST = Bool(expression);
+    if (tipegemBool == "bool")
+    {
+      AST = Bool(expression, "bool");
+    }
+    else if (tipegemBool == "equality")
+    {
+      AST = Bool(expression, "equality");
+    }
+    else
+    {
+      AST = Bool(expression, "var");
+    }
+
     Node printNode;
     printNode.type = "print";
     printNode.left = std::move(AST);
@@ -265,6 +309,7 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
   Lexer::TOKENS expression;
   std::string TipagemVariavel;
   std::string nameVariavel;
+  std::string tipegemBool;
 
   while (current < tokens.EXPRESSION.size())
   {
@@ -290,7 +335,32 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
     }
     else if (Check(Lexer::TokenType::Equality, tokens, current))
     {
+      tipegemBool = "equality";
       TipagemVariavel = "bool";
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Boolean, tokens, current))
+    {
+      if (tipegemBool != "equality")
+      {
+        tipegemBool = "bool";
+      }
+
+      TipagemVariavel = "bool";
+
+      expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+    else if (Check(Lexer::TokenType::Var, tokens, current))
+    {
+      if (tipegemBool != "equality")
+      {
+        tipegemBool = "var";
+      }
+
+      TipagemVariavel = "bool";
+
       expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
       current++;
     }
@@ -315,7 +385,18 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
   }
   else if (TipagemVariavel == "bool")
   {
-    AST = Bool(expression);
+    if (tipegemBool == "bool")
+    {
+      AST = Bool(expression, "bool");
+    }
+    else if (tipegemBool == "equality")
+    {
+      AST = Bool(expression, "equality");
+    }
+    else
+    {
+      AST = Bool(expression, "var");
+    }
 
     Node varNode;
     varNode.identifer = nameVariavel;
@@ -340,6 +421,7 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
   Lexer::TOKENS condition;
   bool hasCondition = false;
   std::vector<Lexer::Tokens> body;
+  std::string TipagemIf;
 
   ParserPrimary::Node ifStatement;
 
@@ -355,6 +437,32 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
       {
         current++;
         hasCondition = true;
+      }
+      else if (Check(Lexer::TokenType::Var, tokens, current))
+      {
+        if (TipagemIf == "equality")
+        {
+          condition.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+          current++;
+        }
+        else
+        {
+          TipagemIf = "var";
+          condition.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+          current++;
+        }
+      }
+      else if (Check(Lexer::TokenType::Boolean, tokens, current))
+      {
+        TipagemIf = "boolean";
+        condition.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+        current++;
+      }
+      else if (Check(Lexer::TokenType::Equality, tokens, current))
+      {
+        TipagemIf = "equality";
+        condition.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+        current++;
       }
       else
       {
@@ -388,7 +496,19 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
     parserStatement(Lexer::TOKENS{body}, ifStatement.Statements, currentBody);
   }
 
-  ifStatement.condition = Bool(condition);
+  if (TipagemIf == "boolean")
+  {
+    ifStatement.condition = Bool(condition, "bool");
+  }
+  else if (TipagemIf == "equality")
+  {
+    ifStatement.condition = Bool(condition, "equality");
+  }
+  else
+  {
+    ifStatement.condition = Bool(Lexer::TOKENS{condition.EXPRESSION}, "var");
+  }
+
   ifStatement.type = "If";
   Statements.push_back(std::move(ifStatement));
 }

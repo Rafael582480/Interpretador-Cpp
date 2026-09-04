@@ -40,7 +40,6 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
       else if (expr->type == "var")
       {
         auto val = environment.GetVAR(expr->value);
-
         if (val.type == "String")
         {
           std::visit([](const auto &value)
@@ -57,10 +56,33 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
             std::cout << "false" << std::endl;
           }
         }
+        else if (val.type == "boolLiteral")
+        {
+          if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
+          {
+            std::cout << "true" << std::endl;
+          }
+          else
+          {
+            std::cout << "false" << std::endl;
+          }
+        }
         else
         {
           std::visit([](const auto &value)
                      { std::cout << value << std::endl; }, val.value);
+        }
+      }
+      else if (expr->left->type == "boolLiteral")
+      {
+        std::cout << "eae" << std::endl;
+        if (expr->left->value == "true")
+        {
+          std::cout << "true" << std::endl;
+        }
+        else
+        {
+          std::cout << "false" << std::endl;
         }
       }
       else if (expr->type == "Equality")
@@ -147,6 +169,10 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 
         environment.CreatingVAR(identifier[i].identifer, "Equality", result);
       }
+      else if (identifier[i].left->type == "boolLiteral")
+      {
+        environment.CreatingVAR(identifier[i].identifer, "boolLiteral", identifier[i].left->value);
+      }
       else if (identifier[i].left->type != "String")
       {
         int val = PrintEvaluate(*identifier[i].left, 0);
@@ -169,14 +195,7 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
       auto &condition = identifier[i].condition;
 
       bool result = false;
-
-      if (condition->type != "Equality")
-      {
-        auto val = environment.GetVAR(condition->value);
-
-        result = std::get<bool>(val.value);
-      }
-      else
+      if (condition->type == "Equality")
       {
         if (condition->left->type == "var" && condition->right->type == "var")
         {
@@ -246,19 +265,57 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
               condition->right->value;
         }
       }
+      else if (condition->type == "var")
+      {
+        auto val = environment.GetVAR(condition->value);
 
-    if (result)
+        if (val.type == "Equality")
+        {
+          if (std::get<bool>(val.value))
+          {
+            result = true;
+          }
+          else
+          {
+            result = false;
+          }
+        }
+        else if (val.type == "boolLiteral")
+        {
+          if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
+          {
+            result = true;
+          }
+          else
+          {
+            result = false;
+          }
+        }
+        else
+        {
+          std::visit([](const auto &value)
+                     { std::cout << value << std::endl; }, val.value);
+        }
+      }
+      else
+      {
+        auto val = environment.GetVAR(condition->value);
+
+        result = std::get<bool>(val.value);
+      }
+
+      if (result)
+      {
+        std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
+
+        Evaluate eval(teste);
+      }
+    }
+    else
     {
-      std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
-
-      Evaluate eval(teste);
+      std::cout << "Error de identificaçao" << std::endl;
     }
   }
-  else
-  {
-    std::cout << "Error de identificaçao" << std::endl;
-  }
-}
 }
 
 int printNodeInfo(ParserPrimary::Node &node, int pos)

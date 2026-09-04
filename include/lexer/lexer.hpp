@@ -12,6 +12,7 @@ public:
     String,
     Number,
     Identifier,
+    Boolean,
 
     Plus,
     Minus,
