@@ -99,6 +99,17 @@ void Lexer::TransformTokens(std::string line)
             continue;
         }
 
+        if (c == '!')
+        {
+            if (line[i + 1] == '=')
+            {
+                tokens.EXPRESSION.push_back({TokenType::Equality, "!="});
+                i++;
+                continue;
+            }
+            continue;
+        }
+
         if (c == '=')
         {
             if (line[i + 1] == '=')

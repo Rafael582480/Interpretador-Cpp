@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -23,7 +24,7 @@ public:
 
   void CreatingVAR(std::string name, std::string type, std::variant<int, std::string, bool> value)
   {
-    for (int i = 0; i < variaveis.vars.size(); i++)
+    for (std::size_t i = 0; i < variaveis.vars.size(); i++)
     {
       if (variaveis.vars[i].name == name)
       {
@@ -38,7 +39,7 @@ public:
 
   Variables GetVAR(std::string name)
   {
-    for (int i = 0; i < variaveis.vars.size(); i++)
+    for (std::size_t i = 0; i < variaveis.vars.size(); i++)
     {
       if (variaveis.vars[i].name == name)
       {
@@ -46,6 +47,6 @@ public:
       }
     }
 
-    std::cout << "Variável não encontrada" << std::endl;
+    throw std::runtime_error("Variável não encontrada");
   }
 };

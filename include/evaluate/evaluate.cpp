@@ -165,7 +165,93 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
     {
       if (identifier[i].left->type == "Equality")
       {
-        bool result = identifier[i].left->left->value == identifier[i].left->right->value;
+        bool result = false;
+        
+        if (identifier[i].left->left->type == "var" && identifier[i].left->right->type == "var")
+        {
+          auto leftValue = environment.GetVAR(identifier[i].left->left->value).value;
+
+          auto rightValue = environment.GetVAR(identifier[i].left->right->value).value;
+          if (identifier[i].left->value == "==")
+          {
+            result = leftValue == rightValue;
+          }
+          else if (identifier[i].left->value == "!=")
+          {
+            result = leftValue != rightValue;
+          }
+        }
+        else if (identifier[i].left->left->type == "var")
+        {
+          auto leftValue =
+              environment.GetVAR(identifier[i].left->left->value).value;
+
+          result = std::visit(
+              [&](const auto &value)
+              {
+                using T = std::decay_t<decltype(value)>;
+
+                if constexpr (std::is_same_v<T, int>)
+                {
+                  return std::stoi(identifier[i].left->right->value) == value;
+                }
+                else if constexpr (std::is_same_v<T, std::string>)
+                {
+                  return identifier[i].left->right->value == value;
+                }
+                else if constexpr (std::is_same_v<T, bool>)
+                {
+                  if (identifier[i].left->value == "==")
+                  {
+                    return value == (identifier[i].left->right->value == "true");
+                  }
+                  else if (identifier[i].left->value == "!=")
+                  {
+                    return value != (identifier[i].left->right->value == "true");
+                  }
+                }
+              },
+              leftValue);
+        }
+        else if (identifier[i].left->right->type == "var")
+        {
+          auto rightValue =
+              environment.GetVAR(identifier[i].left->right->value).value;
+
+            result = std::visit(
+                [&](const auto &value)
+                {
+                  using T = std::decay_t<decltype(value)>;
+                  bool equal = false;
+
+                  if constexpr (std::is_same_v<T, int>)
+                  {
+                    equal = std::to_string(value) == identifier[i].left->left->value;
+                  }
+                  else if constexpr (std::is_same_v<T, std::string>)
+                  {
+                    equal = value == identifier[i].left->left->value;
+                  }
+                  else if constexpr (std::is_same_v<T, bool>)
+                  {
+                    equal = (value ? "true" : "false") == identifier[i].left->left->value;
+                  }
+
+                  return identifier[i].left->value == "==" ? equal : !equal;
+                },
+                rightValue);
+        }
+        else
+        {
+          if (identifier[i].left->value == "==")
+          {
+            result = identifier[i].left->left->value == identifier[i].left->right->value;
+          }
+          else if (identifier[i].left->value == "!=")
+          {
+            result = identifier[i].left->left->value != identifier[i].left->right->value;
+          }
+        }
 
         environment.CreatingVAR(identifier[i].identifer, "Equality", result);
       }
@@ -181,6 +267,10 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
             identifier[i].identifer,
             identifier[i].type,
             val);
+      }
+      else if (identifier[i].left->type == "var")
+      {
+        std::cout << "variavel" << std::endl;
       }
       else
       {
@@ -203,7 +293,14 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 
           auto rightValue = environment.GetVAR(condition->right->value).value;
 
-          result = leftValue == rightValue;
+          if (condition->value == "==")
+          {
+            result = leftValue == rightValue;
+          }
+          else if (condition->value == "!=")
+          {
+            result = leftValue != rightValue;
+          }
         }
         else if (condition->left->type == "var")
         {
@@ -225,8 +322,14 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
                 }
                 else if constexpr (std::is_same_v<T, bool>)
                 {
-                  return condition->right->value ==
-                         (value ? "true" : "false");
+                  if (condition->value == "==")
+                  {
+                    return value == (condition->right->value == "true");
+                  }
+                  else if (condition->value == "!=")
+                  {
+                    return value != (condition->right->value == "true");
+                  }
                 }
               },
               leftValue);
@@ -251,18 +354,29 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
                 }
                 else if constexpr (std::is_same_v<T, bool>)
                 {
-                  return condition->left->value ==
-                         (value ? "true" : "false");
+
+                  if (condition->value == "==")
+                  {
+                    return value == (condition->left->value == "true");
+                  }
+                  else if (condition->value == "!=")
+                  {
+                    return value != (condition->left->value == "true");
+                  }
                 }
               },
               rightValue);
         }
-
         else
         {
-          result =
-              condition->left->value ==
-              condition->right->value;
+          if (condition->value == "==")
+          {
+            result = condition->left->value == condition->right->value;
+          }
+          else if (condition->value == "!=")
+          {
+            result = condition->left->value != condition->right->value;
+          }
         }
       }
       else if (condition->type == "var")

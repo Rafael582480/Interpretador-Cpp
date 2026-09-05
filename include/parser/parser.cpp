@@ -147,7 +147,15 @@ std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens, std::string Tipa
   }
 
   tree->type = "Equality";
-  tree->value = "==";
+
+  if (Tokens.EXPRESSION[1].lexeme == "==")
+  {
+    tree->value = "==";
+  }
+  else
+  {
+    tree->value = "!=";
+  }
 
   auto right = std::make_unique<ParserPrimary::Node>();
   if (Tokens.EXPRESSION[0].type == Lexer::TokenType::Number)
@@ -310,16 +318,24 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
   std::string TipagemVariavel;
   std::string nameVariavel;
   std::string tipegemBool;
+  bool hasReceives = false;
 
   while (current < tokens.EXPRESSION.size())
   {
     if (Check(Lexer::TokenType::Identifier, tokens, current))
     {
-      nameVariavel = tokens.EXPRESSION[current].lexeme;
-      current++;
+      if(hasReceives)
+      {
+        expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
+        current++;
+      } else {
+        nameVariavel = tokens.EXPRESSION[current].lexeme;
+        current++;
+      }
     }
     else if (Check(Lexer::TokenType::Receives, tokens, current))
     {
+      hasReceives = true;
       current++;
     }
     else if (Check(Lexer::TokenType::Semicolon, tokens, current))
