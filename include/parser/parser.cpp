@@ -193,6 +193,37 @@ std::unique_ptr<ParserPrimary::Node> Bool(Lexer::TOKENS Tokens, std::string Tipa
   return tree;
 }
 
+std::unique_ptr<ParserPrimary::Node> TipagemIdentifier(std::string tipo, std::string tipoBool, Lexer::TOKENS expression)
+{
+  std::unique_ptr<ParserPrimary::Node> Tree;
+
+  if (tipo == "string")
+  {
+    Tree = String(expression);
+  }
+  else if (tipo == "bool")
+  {
+    if (tipoBool == "bool")
+    {
+      Tree = Bool(expression, "bool");
+    }
+    else if (tipoBool == "equality")
+    {
+      Tree = Bool(expression, "equality");
+    }
+    else
+    {
+      Tree = Bool(expression, "var");
+    }
+  }
+  else
+  {
+    Tree = Expression(expression);
+  }
+
+  return Tree;
+}
+
 void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
 {
   int sintax = 0;
@@ -274,42 +305,12 @@ void ParserPrimary::parserPrint(Lexer::TOKENS tokens, std::vector<Node> &Stateme
   }
 
   std::unique_ptr<ParserPrimary::Node> AST;
-  if (TipagemPrint == "string")
-  {
-    AST = String(expression);
-    Node printNode;
-    printNode.type = "print";
-    printNode.left = std::move(AST);
-    Statements.push_back(std::move(printNode));
-  }
-  else if (TipagemPrint == "bool")
-  {
-    if (tipegemBool == "bool")
-    {
-      AST = Bool(expression, "bool");
-    }
-    else if (tipegemBool == "equality")
-    {
-      AST = Bool(expression, "equality");
-    }
-    else
-    {
-      AST = Bool(expression, "var");
-    }
 
-    Node printNode;
-    printNode.type = "print";
-    printNode.left = std::move(AST);
-    Statements.push_back(std::move(printNode));
-  }
-  else
-  {
-    AST = Expression(expression);
-    Node printNode;
-    printNode.type = "print";
-    printNode.left = std::move(AST);
-    Statements.push_back(std::move(printNode));
-  }
+  AST = TipagemIdentifier(TipagemPrint, tipegemBool, expression);
+  Node printNode;
+  printNode.type = "print";
+  printNode.left = std::move(AST);
+  Statements.push_back(std::move(printNode));
 }
 
 void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
@@ -324,11 +325,13 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
   {
     if (Check(Lexer::TokenType::Identifier, tokens, current))
     {
-      if(hasReceives)
+      if (hasReceives)
       {
         expression.EXPRESSION.push_back(tokens.EXPRESSION[current]);
         current++;
-      } else {
+      }
+      else
+      {
         nameVariavel = tokens.EXPRESSION[current].lexeme;
         current++;
       }
@@ -389,47 +392,13 @@ void ParserPrimary::parserVar(Lexer::TOKENS tokens, std::vector<Node> &Statement
 
   std::unique_ptr<ParserPrimary::Node> AST;
 
-  if (TipagemVariavel == "string")
-  {
-    AST = String(expression);
+  AST = TipagemIdentifier(TipagemVariavel, tipegemBool, expression);
 
-    Node varNode;
-    varNode.identifer = nameVariavel;
-    varNode.type = "var";
-    varNode.left = std::move(AST);
-    Statements.push_back(std::move(varNode));
-  }
-  else if (TipagemVariavel == "bool")
-  {
-    if (tipegemBool == "bool")
-    {
-      AST = Bool(expression, "bool");
-    }
-    else if (tipegemBool == "equality")
-    {
-      AST = Bool(expression, "equality");
-    }
-    else
-    {
-      AST = Bool(expression, "var");
-    }
-
-    Node varNode;
-    varNode.identifer = nameVariavel;
-    varNode.type = "var";
-    varNode.left = std::move(AST);
-    Statements.push_back(std::move(varNode));
-  }
-  else
-  {
-    AST = Expression(expression);
-
-    Node varNode;
-    varNode.identifer = nameVariavel;
-    varNode.type = "var";
-    varNode.left = std::move(AST);
-    Statements.push_back(std::move(varNode));
-  }
+  Node varNode;
+  varNode.identifer = nameVariavel;
+  varNode.type = "var";
+  varNode.left = std::move(AST);
+  Statements.push_back(std::move(varNode));
 }
 
 void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
@@ -512,18 +481,7 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
     parserStatement(Lexer::TOKENS{body}, ifStatement.Statements, currentBody);
   }
 
-  if (TipagemIf == "boolean")
-  {
-    ifStatement.condition = Bool(condition, "bool");
-  }
-  else if (TipagemIf == "equality")
-  {
-    ifStatement.condition = Bool(condition, "equality");
-  }
-  else
-  {
-    ifStatement.condition = Bool(Lexer::TOKENS{condition.EXPRESSION}, "var");
-  }
+  ifStatement.condition = TipagemIdentifier("bool", TipagemIf, condition);
 
   ifStatement.type = "If";
   Statements.push_back(std::move(ifStatement));

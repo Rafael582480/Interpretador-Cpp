@@ -8,6 +8,180 @@
 
 Environment environment;
 
+int PrintEvaluate(ParserPrimary::Node &node, int pos)
+{
+  if (node.type == "number")
+    return std::stoi(node.value);
+
+  if (node.type == "var")
+    return std::get<int>(environment.GetVAR(node.value).value);
+
+  if (node.type == "operator" && node.left && node.right)
+  {
+    const int left = PrintEvaluate(*node.left, pos + 1);
+    const int right = PrintEvaluate(*node.right, pos + 1);
+
+    if (node.value == "+")
+      return left + right;
+    if (node.value == "-")
+      return right - left;
+    if (node.value == "*")
+      return right * left;
+    if (node.value == "/")
+      return right / left;
+  }
+
+  return 0;
+}
+
+std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
+{
+  std::variant<int, std::string, bool> value;
+
+  if (expr->type == "String")
+  {
+    value = expr->value;
+  }
+  else if (expr->type == "operator")
+  {
+    int val = PrintEvaluate(*expr, 0);
+
+    value = val;
+  }
+  else if (expr->type == "number")
+  {
+    int val = PrintEvaluate(*expr, 0);
+
+    value = val;
+  }
+  else if (expr->type == "var")
+  {
+    auto val = environment.GetVAR(expr->value);
+    if (val.type == "String")
+    {
+      if (std::holds_alternative<std::string>(val.value))
+      {
+        value = std::get<std::string>(val.value);
+      }
+      else
+      {
+        value = std::get<std::string>(val.value);
+      }
+    }
+    else if (val.type == "Equality")
+    {
+      std::cout << "eae" << std::endl;
+      if (std::get<bool>(val.value))
+      {
+        value = "true";
+      }
+      else
+      {
+        value = "false";
+      }
+    }
+    else if (val.type == "boolLiteral")
+    {
+      if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
+      {
+        value = "true";
+      }
+      else
+      {
+        value = "false";
+      }
+    }
+    else
+    {
+      value = std::get<std::string>(val.value);
+    }
+  }
+  else if (expr->left && expr->left->type == "boolLiteral")
+  {
+    std::cout << "eae" << std::endl;
+    if (expr->left->value == "true")
+    {
+      value = "true";
+    }
+    else
+    {
+      value = "false";
+    }
+  }
+  else if (expr->type == "Equality")
+  {
+    std::string equalityValue = expr->value;
+
+    bool hasVar = (expr->right && expr->right->type == "var") || (expr->left && expr->left->type == "var");
+
+    if (hasVar)
+    {
+      bool varIsRight = (expr->right && expr->right->type == "var");
+      ParserPrimary::Node *varNode = varIsRight ? expr->right.get() : expr->left.get();
+      ParserPrimary::Node *otherNode = varIsRight ? expr->left.get() : expr->right.get();
+
+      auto val = environment.GetVAR(varNode->value);
+      bool result = false;
+
+      if (std::holds_alternative<std::string>(val.value))
+      {
+        std::string varValue = std::get<std::string>(val.value);
+        std::string otherValue = otherNode ? otherNode->value : "";
+
+        if (equalityValue == "==")
+          result = (varValue == otherValue);
+        else if (equalityValue == "!=")
+          result = (varValue != otherValue);
+      }
+      else if (std::holds_alternative<int>(val.value))
+      {
+        int varValue = std::get<int>(val.value);
+        int otherValue = 0;
+        try
+        {
+          otherValue = std::stoi(otherNode ? otherNode->value : "0");
+        }
+        catch (...)
+        {
+
+          value = "false";
+          return value;
+        }
+
+        if (equalityValue == "==")
+          result = (varValue == otherValue);
+        else if (equalityValue == "!=")
+          result = (varValue != otherValue);
+      }
+      else if (std::holds_alternative<bool>(val.value))
+      {
+        bool varValue = std::get<bool>(val.value);
+        bool otherValue = (otherNode && otherNode->value == "true");
+
+        if (equalityValue == "==")
+          result = (varValue == otherValue);
+        else if (equalityValue == "!=")
+          result = (varValue != otherValue);
+      }
+
+      value = result ? "true" : "false";
+    }
+    else
+    {
+      if (expr->left && expr->right)
+      {
+        if (equalityValue == "==")
+          value = (expr->left->value == expr->right->value) ? "true" : "false";
+        else if (equalityValue == "!=")
+          value = (expr->left->value != expr->right->value) ? "true" : "false";
+      }
+    }
+
+    return value;
+  }
+  return value;
+}
+
 Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 {
   for (int i = 0; i < identifier.size(); i++)
@@ -21,402 +195,32 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
         continue;
       }
 
-      if (expr->type == "String")
-      {
-        std::cout << expr->value << std::endl;
-      }
-      else if (expr->type == "operator")
-      {
-        int val = PrintEvaluate(*expr, 0);
+      auto value = ReturnValue(expr.get());
 
-        std::cout << val << std::endl;
-      }
-      else if (expr->type == "number")
-      {
-        int val = PrintEvaluate(*expr, 0);
-
-        std::cout << val << std::endl;
-      }
-      else if (expr->type == "var")
-      {
-        auto val = environment.GetVAR(expr->value);
-        if (val.type == "String")
-        {
-          std::visit([](const auto &value)
-                     { std::cout << value << std::endl; }, val.value);
-        }
-        else if (val.type == "Equality")
-        {
-          if (std::get<bool>(val.value))
-          {
-            std::cout << "true" << std::endl;
-          }
-          else
-          {
-            std::cout << "false" << std::endl;
-          }
-        }
-        else if (val.type == "boolLiteral")
-        {
-          if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
-          {
-            std::cout << "true" << std::endl;
-          }
-          else
-          {
-            std::cout << "false" << std::endl;
-          }
-        }
-        else
-        {
-          std::visit([](const auto &value)
-                     { std::cout << value << std::endl; }, val.value);
-        }
-      }
-      else if (expr->left->type == "boolLiteral")
-      {
-        std::cout << "eae" << std::endl;
-        if (expr->left->value == "true")
-        {
-          std::cout << "true" << std::endl;
-        }
-        else
-        {
-          std::cout << "false" << std::endl;
-        }
-      }
-      else if (expr->type == "Equality")
-      {
-        if (expr->right && (expr->right->type == "var" || (expr->left && expr->left->type == "var")))
-        {
-          if (expr->right->type == "var")
-          {
-            auto val = environment.GetVAR(expr->right->value);
-            if (std::holds_alternative<std::string>(val.value))
-            {
-              if (expr->left && std::get<std::string>(val.value) == expr->left->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else if (std::holds_alternative<int>(val.value))
-            {
-              if (expr->left && std::to_string(std::get<int>(val.value)) == expr->left->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else if (std::holds_alternative<bool>(val.value))
-            {
-              if (expr->left && (std::get<bool>(val.value) ? "true" : "false") == expr->left->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else
-            {
-              std::cout << "false" << std::endl;
-            }
-          }
-          else if (expr->left)
-          {
-            auto val = environment.GetVAR(expr->left->value);
-            if (std::holds_alternative<std::string>(val.value))
-            {
-              if (expr->right && std::get<std::string>(val.value) == expr->right->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else if (std::holds_alternative<int>(val.value))
-            {
-              if (expr->right && std::to_string(std::get<int>(val.value)) == expr->right->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else if (std::holds_alternative<bool>(val.value))
-            {
-              if (expr->right && (std::get<bool>(val.value) ? "true" : "false") == expr->right->value)
-                std::cout << "true" << std::endl;
-              else
-                std::cout << "false" << std::endl;
-            }
-            else
-            {
-              std::cout << "false" << std::endl;
-            }
-          }
-        }
-        else if (expr->right && expr->left)
-        {
-          if (expr->right->value == expr->left->value)
-          {
-            std::cout << "true" << std::endl;
-          }
-          else
-          {
-            std::cout << "false" << std::endl;
-          }
-        }
-      }
+      std::visit([](const auto &val)
+                 { std::cout << val << std::endl; },
+                 value);
     }
     else if (identifier[i].type == "var")
     {
-      if (identifier[i].left->type == "Equality")
+      auto &expr = identifier[i].left;
+      if (!expr)
       {
-        bool result = false;
-        
-        if (identifier[i].left->left->type == "var" && identifier[i].left->right->type == "var")
-        {
-          auto leftValue = environment.GetVAR(identifier[i].left->left->value).value;
-
-          auto rightValue = environment.GetVAR(identifier[i].left->right->value).value;
-          if (identifier[i].left->value == "==")
-          {
-            result = leftValue == rightValue;
-          }
-          else if (identifier[i].left->value == "!=")
-          {
-            result = leftValue != rightValue;
-          }
-        }
-        else if (identifier[i].left->left->type == "var")
-        {
-          auto leftValue =
-              environment.GetVAR(identifier[i].left->left->value).value;
-
-          result = std::visit(
-              [&](const auto &value)
-              {
-                using T = std::decay_t<decltype(value)>;
-
-                if constexpr (std::is_same_v<T, int>)
-                {
-                  return std::stoi(identifier[i].left->right->value) == value;
-                }
-                else if constexpr (std::is_same_v<T, std::string>)
-                {
-                  return identifier[i].left->right->value == value;
-                }
-                else if constexpr (std::is_same_v<T, bool>)
-                {
-                  if (identifier[i].left->value == "==")
-                  {
-                    return value == (identifier[i].left->right->value == "true");
-                  }
-                  else if (identifier[i].left->value == "!=")
-                  {
-                    return value != (identifier[i].left->right->value == "true");
-                  }
-                }
-              },
-              leftValue);
-        }
-        else if (identifier[i].left->right->type == "var")
-        {
-          auto rightValue =
-              environment.GetVAR(identifier[i].left->right->value).value;
-
-            result = std::visit(
-                [&](const auto &value)
-                {
-                  using T = std::decay_t<decltype(value)>;
-                  bool equal = false;
-
-                  if constexpr (std::is_same_v<T, int>)
-                  {
-                    equal = std::to_string(value) == identifier[i].left->left->value;
-                  }
-                  else if constexpr (std::is_same_v<T, std::string>)
-                  {
-                    equal = value == identifier[i].left->left->value;
-                  }
-                  else if constexpr (std::is_same_v<T, bool>)
-                  {
-                    equal = (value ? "true" : "false") == identifier[i].left->left->value;
-                  }
-
-                  return identifier[i].left->value == "==" ? equal : !equal;
-                },
-                rightValue);
-        }
-        else
-        {
-          if (identifier[i].left->value == "==")
-          {
-            result = identifier[i].left->left->value == identifier[i].left->right->value;
-          }
-          else if (identifier[i].left->value == "!=")
-          {
-            result = identifier[i].left->left->value != identifier[i].left->right->value;
-          }
-        }
-
-        environment.CreatingVAR(identifier[i].identifer, "Equality", result);
+        std::cout << "Error de expressao" << std::endl;
+        continue;
       }
-      else if (identifier[i].left->type == "boolLiteral")
-      {
-        environment.CreatingVAR(identifier[i].identifer, "boolLiteral", identifier[i].left->value);
-      }
-      else if (identifier[i].left->type != "String")
-      {
-        int val = PrintEvaluate(*identifier[i].left, 0);
 
-        environment.CreatingVAR(
-            identifier[i].identifer,
-            identifier[i].type,
-            val);
-      }
-      else if (identifier[i].left->type == "var")
-      {
-        std::cout << "variavel" << std::endl;
-      }
-      else
-      {
-        environment.CreatingVAR(
-            identifier[i].identifer,
-            identifier[i].type,
-            identifier[i].left->value);
-      }
+      auto value = ReturnValue(expr.get());
+
+      environment.CreatingVAR(identifier[i].identifer, identifier[i].type, value);
     }
     else if (identifier[i].type == "If")
     {
       auto &condition = identifier[i].condition;
 
       bool result = false;
-      if (condition->type == "Equality")
-      {
-        if (condition->left->type == "var" && condition->right->type == "var")
-        {
-          auto leftValue = environment.GetVAR(condition->left->value).value;
 
-          auto rightValue = environment.GetVAR(condition->right->value).value;
-
-          if (condition->value == "==")
-          {
-            result = leftValue == rightValue;
-          }
-          else if (condition->value == "!=")
-          {
-            result = leftValue != rightValue;
-          }
-        }
-        else if (condition->left->type == "var")
-        {
-          auto leftValue =
-              environment.GetVAR(condition->left->value).value;
-
-          result = std::visit(
-              [&](const auto &value)
-              {
-                using T = std::decay_t<decltype(value)>;
-
-                if constexpr (std::is_same_v<T, int>)
-                {
-                  return std::stoi(condition->right->value) == value;
-                }
-                else if constexpr (std::is_same_v<T, std::string>)
-                {
-                  return condition->right->value == value;
-                }
-                else if constexpr (std::is_same_v<T, bool>)
-                {
-                  if (condition->value == "==")
-                  {
-                    return value == (condition->right->value == "true");
-                  }
-                  else if (condition->value == "!=")
-                  {
-                    return value != (condition->right->value == "true");
-                  }
-                }
-              },
-              leftValue);
-        }
-        else if (condition->right->type == "var")
-        {
-          auto rightValue =
-              environment.GetVAR(condition->right->value).value;
-
-          result = std::visit(
-              [&](const auto &value)
-              {
-                using T = std::decay_t<decltype(value)>;
-
-                if constexpr (std::is_same_v<T, int>)
-                {
-                  return condition->left->value == std::to_string(value);
-                }
-                else if constexpr (std::is_same_v<T, std::string>)
-                {
-                  return condition->left->value == value;
-                }
-                else if constexpr (std::is_same_v<T, bool>)
-                {
-
-                  if (condition->value == "==")
-                  {
-                    return value == (condition->left->value == "true");
-                  }
-                  else if (condition->value == "!=")
-                  {
-                    return value != (condition->left->value == "true");
-                  }
-                }
-              },
-              rightValue);
-        }
-        else
-        {
-          if (condition->value == "==")
-          {
-            result = condition->left->value == condition->right->value;
-          }
-          else if (condition->value == "!=")
-          {
-            result = condition->left->value != condition->right->value;
-          }
-        }
-      }
-      else if (condition->type == "var")
-      {
-        auto val = environment.GetVAR(condition->value);
-
-        if (val.type == "Equality")
-        {
-          if (std::get<bool>(val.value))
-          {
-            result = true;
-          }
-          else
-          {
-            result = false;
-          }
-        }
-        else if (val.type == "boolLiteral")
-        {
-          if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
-          {
-            result = true;
-          }
-          else
-          {
-            result = false;
-          }
-        }
-        else
-        {
-          std::visit([](const auto &value)
-                     { std::cout << value << std::endl; }, val.value);
-        }
-      }
-      else
-      {
-        auto val = environment.GetVAR(condition->value);
-
-        result = std::get<bool>(val.value);
-      }
+      result = std::get<std::string>(ReturnValue(condition.get())) == "true";
 
       if (result)
       {
@@ -428,57 +232,7 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
     else
     {
       std::cout << "Error de identificaçao" << std::endl;
+      break;
     }
   }
-}
-
-int printNodeInfo(ParserPrimary::Node &node, int pos)
-{
-  return std::stoi(node.value);
-}
-
-int Evaluate::PrintEvaluate(ParserPrimary::Node &node, int pos = 0)
-{
-
-  if (node.type == "String")
-  {
-    std::cout << node.value << std::endl;
-  }
-
-  if (node.type == "number")
-  {
-    return printNodeInfo(node, pos);
-  }
-
-  if (node.type == "operator")
-  {
-    int left = PrintEvaluate(*node.left, pos + 1);
-    int right = PrintEvaluate(*node.right, pos + 1);
-
-    if (node.value == "+")
-    {
-      return right + left;
-    }
-    else if (node.value == "-")
-    {
-      return right - left;
-    }
-    else if (node.value == "*")
-    {
-      return right * left;
-    }
-    else if (node.value == "/")
-    {
-      return right / left;
-    }
-  }
-
-  if (node.type == "var")
-  {
-    auto val = environment.GetVAR(node.value);
-
-    return std::get<int>(val.value);
-  }
-
-  return 0;
 }
