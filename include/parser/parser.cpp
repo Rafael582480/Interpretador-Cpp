@@ -554,6 +554,10 @@ void ParserPrimary::parserStatement(Lexer::TOKENS tokens, std::vector<Node> &Sta
     current++;
     parserVar(tokens, Statements, current);
   }
+  else if (Check(Lexer::TokenType::Identifier, tokens, current))
+  {
+    parserVar(tokens, Statements, current);
+  }
   else if (Check(Lexer::TokenType::If, tokens, current))
   {
     current++;

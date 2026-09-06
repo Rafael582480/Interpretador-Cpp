@@ -57,6 +57,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   else if (expr->type == "var")
   {
     auto val = environment.GetVAR(expr->value);
+    
     if (val.type == "String")
     {
       if (std::holds_alternative<std::string>(val.value))
@@ -92,7 +93,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
     }
     else
     {
-      value = std::get<std::string>(val.value);
+      value = std::get<int>(val.value);
     }
   }
   else if (expr->left && expr->left->type == "boolLiteral")
@@ -267,7 +268,7 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
       }
 
       auto value = ReturnValue(expr.get());
-
+      
       environment.CreatingVAR(identifier[i].identifer, identifier[i].type, value);
     }
     else if (identifier[i].type == "If")

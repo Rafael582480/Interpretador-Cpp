@@ -1,8 +1,4 @@
 var x = 2;
-var y = 2;
-
-if (x == y) {
-  print("X é igual a Y");
-} else {
-  print("X é diferente de Y");
-};
+print(x);
+x = 3;
+print(x);
