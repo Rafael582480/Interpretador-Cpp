@@ -17,6 +17,7 @@ public:
   {
     std::unique_ptr<Node> condition;
     std::vector<Node> Statements;
+    std::unique_ptr<Node> Else;
     std::string identifer;
     std::string type;
     std::unique_ptr<Node> left;
@@ -40,6 +41,7 @@ public:
   void parserPrint(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
   void parserVar(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
   void parserIf(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
+  void parserElse(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
 
   bool Check(Lexer::TokenType type, Lexer::TOKENS tokens, int &current);
 };

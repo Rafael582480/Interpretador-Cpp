@@ -464,7 +464,19 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
       else if (Check(Lexer::TokenType::EndBlock, tokens, current))
       {
         current++;
-        break;
+        if (Check(Lexer::TokenType::Semicolon, tokens, current))
+        {
+          current++;
+          break;
+        }
+        else if (Check(Lexer::TokenType::Else, tokens, current))
+        {
+          current++;
+
+          ifStatement.Else = std::make_unique<Node>();
+
+          parserElse(tokens, ifStatement.Else->Statements, current);
+        }
       }
       else
       {
@@ -485,6 +497,42 @@ void ParserPrimary::parserIf(Lexer::TOKENS tokens, std::vector<Node> &Statements
 
   ifStatement.type = "If";
   Statements.push_back(std::move(ifStatement));
+}
+
+void ParserPrimary::parserElse(Lexer::TOKENS tokens, std::vector<Node> &Statements, int &current)
+{
+  std::vector<Lexer::Tokens> body;
+  std::string TipagemElse;
+
+  ParserPrimary::Node elseStatement;
+
+  while (current < tokens.EXPRESSION.size())
+  {
+    if (Check(Lexer::TokenType::OpenBlock, tokens, current))
+    {
+      current++;
+    }
+    else if (Check(Lexer::TokenType::EndBlock, tokens, current))
+    {
+      current++;
+      break;
+    }
+    else
+    {
+      body.push_back(tokens.EXPRESSION[current]);
+      current++;
+    }
+  }
+
+  int currentBody = 0;
+
+  while (currentBody < body.size())
+  {
+    parserStatement(Lexer::TOKENS{body}, elseStatement.Statements, currentBody);
+  }
+
+  elseStatement.type = "Else";
+  Statements.push_back(std::move(elseStatement));
 }
 
 bool ParserPrimary::Check(Lexer::TokenType type, Lexer::TOKENS tokens, int &current)

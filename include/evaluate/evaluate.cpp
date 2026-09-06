@@ -70,7 +70,6 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
     }
     else if (val.type == "Equality")
     {
-      std::cout << "eae" << std::endl;
       if (std::get<bool>(val.value))
       {
         value = "true";
@@ -98,7 +97,6 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   }
   else if (expr->left && expr->left->type == "boolLiteral")
   {
-    std::cout << "eae" << std::endl;
     if (expr->left->value == "true")
     {
       value = "true";
@@ -112,68 +110,126 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   {
     std::string equalityValue = expr->value;
 
-    bool hasVar = (expr->right && expr->right->type == "var") || (expr->left && expr->left->type == "var");
+    bool hasVar = expr->right->type == "var" || expr->left->type == "var";
+    bool result = false;
 
-    if (hasVar)
+    if (expr->left->type == "var" && expr->right->type == "var")
     {
-      bool varIsRight = (expr->right && expr->right->type == "var");
-      ParserPrimary::Node *varNode = varIsRight ? expr->right.get() : expr->left.get();
-      ParserPrimary::Node *otherNode = varIsRight ? expr->left.get() : expr->right.get();
+      auto leftValue = environment.GetVAR(expr->left->value).value;
+      auto rightValue = environment.GetVAR(expr->right->value).value;
 
-      auto val = environment.GetVAR(varNode->value);
-      bool result = false;
-
-      if (std::holds_alternative<std::string>(val.value))
+      if (std::holds_alternative<std::string>(leftValue) && std::holds_alternative<std::string>(rightValue))
       {
-        std::string varValue = std::get<std::string>(val.value);
-        std::string otherValue = otherNode ? otherNode->value : "";
+        leftValue = std::get<std::string>(leftValue);
+        rightValue = std::get<std::string>(rightValue);
 
         if (equalityValue == "==")
-          result = (varValue == otherValue);
-        else if (equalityValue == "!=")
-          result = (varValue != otherValue);
-      }
-      else if (std::holds_alternative<int>(val.value))
-      {
-        int varValue = std::get<int>(val.value);
-        int otherValue = 0;
-        try
         {
-          otherValue = std::stoi(otherNode ? otherNode->value : "0");
+          value = leftValue == rightValue;
         }
-        catch (...)
+        else if (equalityValue == "!=")
         {
-
-          value = "false";
-          return value;
+          value = leftValue != rightValue;
         }
-
-        if (equalityValue == "==")
-          result = (varValue == otherValue);
-        else if (equalityValue == "!=")
-          result = (varValue != otherValue);
       }
-      else if (std::holds_alternative<bool>(val.value))
+      else if (std::holds_alternative<int>(leftValue) && std::holds_alternative<int>(rightValue))
       {
-        bool varValue = std::get<bool>(val.value);
-        bool otherValue = (otherNode && otherNode->value == "true");
+        leftValue = std::get<int>(leftValue);
+        rightValue = std::get<int>(rightValue);
 
         if (equalityValue == "==")
-          result = (varValue == otherValue);
+        {
+          result = leftValue == rightValue;
+        }
         else if (equalityValue == "!=")
-          result = (varValue != otherValue);
+        {
+          result = leftValue != rightValue;
+        }
+      }
+      else if (std::holds_alternative<bool>(leftValue) && std::holds_alternative<bool>(rightValue))
+      {
+        leftValue = std::get<bool>(leftValue);
+        rightValue = std::get<bool>(rightValue);
+
+        if (equalityValue == "==")
+        {
+          result = leftValue == rightValue;
+        }
+        else if (equalityValue == "!=")
+        {
+          result = leftValue != rightValue;
+        }
+      }
+      else
+      {
+        result = false;
       }
 
       value = result ? "true" : "false";
     }
     else
     {
-      if (expr->left && expr->right)
+      if (hasVar)
       {
-        if (equalityValue == "==")
-          value = (expr->left->value == expr->right->value) ? "true" : "false";
-        else if (equalityValue == "!=")
-          value = (expr->left->value != expr->right->value) ? "true" : "false";
+        bool varIsRight = (expr->right && expr->right->type == "var");
+        ParserPrimary::Node *varNode = varIsRight ? expr->right.get() : expr->left.get();
+        ParserPrimary::Node *otherNode = varIsRight ? expr->left.get() : expr->right.get();
+
+        auto val = environment.GetVAR(varNode->value);
+        bool result = false;
+
+        if (std::holds_alternative<std::string>(val.value))
+        {
+          std::string varValue = std::get<std::string>(val.value);
+          std::string otherValue = otherNode ? otherNode->value : "";
+
+          if (equalityValue == "==")
+            result = (varValue == otherValue);
+          else if (equalityValue == "!=")
+            result = (varValue != otherValue);
+        }
+        else if (std::holds_alternative<int>(val.value))
+        {
+          int varValue = std::get<int>(val.value);
+          int otherValue = 0;
+          try
+          {
+            otherValue = std::stoi(otherNode ? otherNode->value : "0");
+          }
+          catch (...)
+          {
+
+            value = "false";
+            return value;
+          }
+
+          if (equalityValue == "==")
+            result = (varValue == otherValue);
+          else if (equalityValue == "!=")
+            result = (varValue != otherValue);
+        }
+        else if (std::holds_alternative<bool>(val.value))
+        {
+          bool varValue = std::get<bool>(val.value);
+          bool otherValue = (otherNode && otherNode->value == "true");
+
+          if (equalityValue == "==")
+            result = (varValue == otherValue);
+          else if (equalityValue == "!=")
+            result = (varValue != otherValue);
+        }
+
+        value = result ? "true" : "false";
+      }
+      else
+      {
+        if (expr->left && expr->right)
+        {
+          if (equalityValue == "==")
+            value = (expr->left->value == expr->right->value) ? "true" : "false";
+          else if (equalityValue == "!=")
+            value = (expr->left->value != expr->right->value) ? "true" : "false";
+        }
       }
     }
 
@@ -228,6 +284,18 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 
         Evaluate eval(teste);
       }
+      else if (!result && identifier[i].Else)
+      {
+        std::vector<ParserPrimary::Node> &teste = identifier[i].Else->Statements;
+
+        Evaluate eval(teste);
+      }
+    }
+    else if (identifier[i].type == "Else")
+    {
+      std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
+
+      Evaluate eval(teste);
     }
     else
     {

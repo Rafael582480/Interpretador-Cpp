@@ -23,7 +23,7 @@ int main()
     source+=line;
     source+='\n';
   }
-
+  
   Lexer lexer(source);
   Lexer::TOKENS tokens = lexer.getTokens();
 

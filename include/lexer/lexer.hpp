@@ -30,6 +30,7 @@ public:
     Equality,
 
     If,
+    Else,
     Var,
     Print,
     Name,
