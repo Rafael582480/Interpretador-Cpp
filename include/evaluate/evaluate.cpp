@@ -57,7 +57,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   else if (expr->type == "var")
   {
     auto val = environment.GetVAR(expr->value);
-    
+
     if (val.type == "String")
     {
       if (std::holds_alternative<std::string>(val.value))
@@ -71,7 +71,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
     }
     else if (val.type == "Equality")
     {
-      if (std::get<bool>(val.value))
+      if (std::get<std::string>(val.value) == "true")
       {
         value = "true";
       }
@@ -82,7 +82,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
     }
     else if (val.type == "boolLiteral")
     {
-      if (std::holds_alternative<std::string>(val.value) && std::get<std::string>(val.value) == "true")
+      if (std::get<std::string>(val.value) == "true")
       {
         value = "true";
       }
@@ -96,9 +96,9 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
       value = std::get<int>(val.value);
     }
   }
-  else if (expr->left && expr->left->type == "boolLiteral")
+  else if (expr->type == "boolLiteral" || (expr->left && expr->left->type == "boolLiteral"))
   {
-    if (expr->left->value == "true")
+    if (expr->value == "true" || expr->left->value == "true")
     {
       value = "true";
     }
@@ -110,12 +110,12 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   else if (expr->type == "Equality")
   {
     std::string equalityValue = expr->value;
-
     bool hasVar = expr->right->type == "var" || expr->left->type == "var";
     bool result = false;
 
     if (expr->left->type == "var" && expr->right->type == "var")
     {
+
       auto leftValue = environment.GetVAR(expr->left->value).value;
       auto rightValue = environment.GetVAR(expr->right->value).value;
 
@@ -224,13 +224,15 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
       }
       else
       {
-        if (expr->left && expr->right)
+        if (equalityValue == "==")
         {
-          if (equalityValue == "==")
-            value = (expr->left->value == expr->right->value) ? "true" : "false";
-          else if (equalityValue == "!=")
-            value = (expr->left->value != expr->right->value) ? "true" : "false";
+          result = expr->left->value == expr->right->value;
         }
+        else if (equalityValue == "!=")
+        {
+          result = expr->left->value != expr->right->value;
+        }
+        value = result ? "true" : "false";
       }
     }
 
@@ -268,8 +270,8 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
       }
 
       auto value = ReturnValue(expr.get());
-      
-      environment.CreatingVAR(identifier[i].identifer, identifier[i].type, value);
+
+      environment.CreatingVAR(identifier[i].identifer, identifier[i].left->type, value);
     }
     else if (identifier[i].type == "If")
     {
