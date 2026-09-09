@@ -1,8 +1,9 @@
-var x = "oi";
+var x = 10;
 
-if(x == "oi")
+if(true)
 {
-  print("Funcionou");
-} else {
-  print("nop");
+  x = x + 5;
+  print(x);
 };
+
+print(x);

@@ -8,18 +8,18 @@
 
 Environment environment;
 
-int PrintEvaluate(ParserPrimary::Node &node, int pos)
+int PrintEvaluate(ParserPrimary::Node &node, int pos, Environment &environmentScopo)
 {
   if (node.type == "number")
     return std::stoi(node.value);
 
   if (node.type == "var")
-    return std::get<int>(environment.GetVAR(node.value).value);
+    return std::get<int>(environmentScopo.GetVAR(node.value).value);
 
   if (node.type == "operator" && node.left && node.right)
   {
-    const int left = PrintEvaluate(*node.left, pos + 1);
-    const int right = PrintEvaluate(*node.right, pos + 1);
+    const int left = PrintEvaluate(*node.left, pos + 1, environmentScopo);
+    const int right = PrintEvaluate(*node.right, pos + 1, environmentScopo);
 
     if (node.value == "+")
       return left + right;
@@ -34,7 +34,7 @@ int PrintEvaluate(ParserPrimary::Node &node, int pos)
   return 0;
 }
 
-std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
+std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr, Environment &environmentScopo)
 {
   std::variant<int, std::string, bool> value;
 
@@ -44,19 +44,19 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
   }
   else if (expr->type == "operator")
   {
-    int val = PrintEvaluate(*expr, 0);
+    int val = PrintEvaluate(*expr, 0, environmentScopo);
 
     value = val;
   }
   else if (expr->type == "number")
   {
-    int val = PrintEvaluate(*expr, 0);
+    int val = PrintEvaluate(*expr, 0, environmentScopo);
 
     value = val;
   }
   else if (expr->type == "var")
   {
-    auto val = environment.GetVAR(expr->value);
+    auto val = environmentScopo.GetVAR(expr->value);
 
     if (val.type == "String")
     {
@@ -116,8 +116,8 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
     if (expr->left->type == "var" && expr->right->type == "var")
     {
 
-      auto leftValue = environment.GetVAR(expr->left->value).value;
-      auto rightValue = environment.GetVAR(expr->right->value).value;
+      auto leftValue = environmentScopo.GetVAR(expr->left->value).value;
+      auto rightValue = environmentScopo.GetVAR(expr->right->value).value;
 
       if (std::holds_alternative<std::string>(leftValue) && std::holds_alternative<std::string>(rightValue))
       {
@@ -176,7 +176,7 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
         ParserPrimary::Node *varNode = varIsRight ? expr->right.get() : expr->left.get();
         ParserPrimary::Node *otherNode = varIsRight ? expr->left.get() : expr->right.get();
 
-        auto val = environment.GetVAR(varNode->value);
+        auto val = environmentScopo.GetVAR(varNode->value);
         bool result = false;
 
         if (std::holds_alternative<std::string>(val.value))
@@ -238,10 +238,11 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr)
 
     return value;
   }
+
   return value;
 }
 
-Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
+Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier, Environment &environmentScopo)
 {
   for (int i = 0; i < identifier.size(); i++)
   {
@@ -254,7 +255,7 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
         continue;
       }
 
-      auto value = ReturnValue(expr.get());
+      auto value = ReturnValue(expr.get(), environmentScopo);
 
       std::visit([](const auto &val)
                  { std::cout << val << std::endl; },
@@ -269,9 +270,9 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
         continue;
       }
 
-      auto value = ReturnValue(expr.get());
+      auto value = ReturnValue(expr.get(), environmentScopo);
 
-      environment.CreatingVAR(identifier[i].identifer, identifier[i].left->type, value);
+      environmentScopo.CreatingVAR(identifier[i].identifer, identifier[i].left->type, value);
     }
     else if (identifier[i].type == "If")
     {
@@ -279,26 +280,27 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier)
 
       bool result = false;
 
-      result = std::get<std::string>(ReturnValue(condition.get())) == "true";
+      result = std::get<std::string>(ReturnValue(condition.get(), environmentScopo)) == "true";
+      Environment Ifenvironment(&environmentScopo);
 
       if (result)
       {
         std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
 
-        Evaluate eval(teste);
+        Evaluate eval(teste, Ifenvironment);
       }
       else if (!result && identifier[i].Else)
       {
         std::vector<ParserPrimary::Node> &teste = identifier[i].Else->Statements;
 
-        Evaluate eval(teste);
+        Evaluate eval(teste, Ifenvironment);
       }
     }
     else if (identifier[i].type == "Else")
     {
       std::vector<ParserPrimary::Node> &teste = identifier[i].Statements;
-
-      Evaluate eval(teste);
+      Environment Elseenvironment(&environmentScopo);
+      Evaluate eval(teste, Elseenvironment);
     }
     else
     {

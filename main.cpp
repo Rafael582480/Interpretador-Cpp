@@ -71,8 +71,8 @@ int main()
   // =========================
 
   auto inicioEvaluate = high_resolution_clock::now();
-
-  Evaluate evaluate(parser.Statements);
+  Environment environment;
+  Evaluate evaluate(parser.Statements, environment);
 
   auto fimEvaluate = high_resolution_clock::now();
 

@@ -7,6 +7,9 @@
 
 class Environment
 {
+private:
+  Environment *parent;
+
 public:
   struct Variables
   {
@@ -21,6 +24,10 @@ public:
   };
 
   Variaveis variaveis;
+
+  Environment(Environment *parent = nullptr) : parent(parent)
+  {
+  }
 
   void CreatingVAR(std::string name, std::string type, std::variant<int, std::string, bool> value)
   {
@@ -45,6 +52,11 @@ public:
       {
         return variaveis.vars[i];
       }
+    }
+
+    if (parent != nullptr)
+    {
+      return parent->GetVAR(name);
     }
 
     throw std::runtime_error("Variável não encontrada");
