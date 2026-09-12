@@ -40,6 +40,7 @@ public:
 
   void parserPrint(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
   void parserVar(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
+  void parserIdentifier(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
   void parserIf(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
   void parserElse(Lexer::TOKENS, std::vector<Node> &Statements, int &current);
 

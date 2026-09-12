@@ -10,6 +10,11 @@ Environment environment;
 
 int PrintEvaluate(ParserPrimary::Node &node, int pos, Environment &environmentScopo)
 {
+  if (node.type == "parent")
+  {
+    return PrintEvaluate(*node.right, pos + 1, environmentScopo);
+  }
+
   if (node.type == "number")
     return std::stoi(node.value);
 
@@ -24,11 +29,11 @@ int PrintEvaluate(ParserPrimary::Node &node, int pos, Environment &environmentSc
     if (node.value == "+")
       return left + right;
     if (node.value == "-")
-      return right - left;
+      return left - right;
     if (node.value == "*")
-      return right * left;
+      return left * right;
     if (node.value == "/")
-      return right / left;
+      return left / right;
   }
 
   return 0;
@@ -238,6 +243,10 @@ std::variant<int, std::string, bool> ReturnValue(ParserPrimary::Node *expr, Envi
 
     return value;
   }
+  else if (expr->type == "parent")
+  {
+    return PrintEvaluate(*expr->right, 0, environmentScopo);
+  }
 
   return value;
 }
@@ -273,6 +282,19 @@ Evaluate::Evaluate(std::vector<ParserPrimary::Node> &identifier, Environment &en
       auto value = ReturnValue(expr.get(), environmentScopo);
 
       environmentScopo.CreatingVAR(identifier[i].identifer, identifier[i].left->type, value);
+    }
+    else if (identifier[i].type == "identificador")
+    {
+      auto &expr = identifier[i].left;
+      if (!expr)
+      {
+        std::cout << "Error de expressao" << std::endl;
+        continue;
+      }
+
+      auto value = ReturnValue(expr.get(), environmentScopo);
+
+      environmentScopo.SetVAR(identifier[i].identifer, identifier[i].left->type, value);
     }
     else if (identifier[i].type == "If")
     {

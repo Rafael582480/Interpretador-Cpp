@@ -56,29 +56,17 @@ int main()
 
   auto fimLexer = high_resolution_clock::now();
 
-  // =========================
-  // Parser
-  // =========================
-
   auto inicioParser = high_resolution_clock::now();
 
   ParserPrimary parser(tokens);
 
   auto fimParser = high_resolution_clock::now();
 
-  // =========================
-  // Evaluate
-  // =========================
-
   auto inicioEvaluate = high_resolution_clock::now();
   Environment environment;
   Evaluate evaluate(parser.Statements, environment);
 
   auto fimEvaluate = high_resolution_clock::now();
-
-  // =========================
-  // Resultados
-  // =========================
 
   auto fimTotal = high_resolution_clock::now();
 
@@ -97,29 +85,23 @@ int main()
   auto tempoTotal =
       duration_cast<microseconds>(fimTotal - inicioTotal);
 
-  std::cout << "\n========== PERFORMANCE ==========\n";
+  std::cout << "PERFORMANCE" << std::endl;
 
   std::cout << "Arquivo:   "
-            << tempoArquivo.count()
-            << " us\n";
+            << tempoArquivo.count() << std::endl;
 
   std::cout << "Lexer:     "
-            << tempoLexer.count()
-            << " us\n";
+            << tempoLexer.count() << std::endl;
 
   std::cout << "Parser:    "
-            << tempoParser.count()
-            << " us\n";
+            << tempoParser.count() << std::endl;
 
   std::cout << "Evaluate:  "
-            << tempoEvaluate.count()
-            << " us\n";
+            << tempoEvaluate.count() << std::endl;
 
   std::cout << "Total:     "
-            << tempoTotal.count()
-            << " us\n";
+            << tempoTotal.count() << std::endl;
 
-  std::cout << "================================\n";
 
   Arquivo.close();
 

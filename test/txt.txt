@@ -1,9 +1,41 @@
-var x = 10;
+var a = 2 + 3;
+print(a);
 
-if(true)
-{
-  x = x + 5;
-  print(x);
-};
+var b = 10 - 4;
+print(b);
 
-print(x);
+var c = 2 * 3;
+print(c);
+
+var d = 10 / 2;
+print(d);
+
+var e = 2 + 3 + 4;
+print(e);
+
+var f = 10 - 3 - 2;
+print(f);
+
+var g = 2 + (2 + 2);
+print(g);
+
+var h = (2 + 2) + 3;
+print(h);
+
+var i = 2 * (2 + 2);
+print(i);
+
+var j = (2 + 2) * 2;
+print(j);
+
+var k = (2 + 3) * (4 + 1);
+print(k);
+
+var l = 10 + (2 * 3);
+print(l);
+
+var m = (10 - 4) + (2 * 3);
+print(m);
+
+var n = (2 + 2) + (3 + 3);
+print(n);
